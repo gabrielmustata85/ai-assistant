@@ -36,4 +36,13 @@ class InvoiceServiceTest {
         verify(companyService).get(5L);          // firma e validată
         assertEquals(5L, saved.getCompanyId());  // company_id e setat din path
     }
+
+    @Test
+    void listForCompanyGoesThroughCompanyGuard() {
+        when(repository.findByCompanyId(5L)).thenReturn(java.util.List.of());
+
+        service.listForCompany(5L);
+
+        verify(companyService).get(5L);
+    }
 }

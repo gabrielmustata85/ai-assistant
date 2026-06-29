@@ -17,6 +17,7 @@ public class CompanyService {
     public Company create(Company company) {
         company.setId(null);
         company.setOwnerUserId(CurrentUser.id());   // firma aparține userului care o creează
+        if (company.getVatPayer() == null) company.setVatPayer(false);
         return repository.save(company);
     }
 

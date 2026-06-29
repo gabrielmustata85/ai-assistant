@@ -34,4 +34,22 @@ class PayrollServiceTest {
         verify(companyService).get(7L);
         assertEquals(7L, saved.getCompanyId());
     }
+
+    @Test
+    void employeesGoesThroughCompanyGuard() {
+        when(employeeRepository.findByCompanyId(7L)).thenReturn(java.util.List.of());
+
+        service.employees(7L);
+
+        verify(companyService).get(7L);
+    }
+
+    @Test
+    void expensesGoesThroughCompanyGuard() {
+        when(expenseRepository.findByCompanyId(7L)).thenReturn(java.util.List.of());
+
+        service.expenses(7L);
+
+        verify(companyService).get(7L);
+    }
 }
