@@ -13,6 +13,7 @@ public class CompanyService {
 
     public Company create(Company company) {
         company.setId(null);
+        if (company.getVatPayer() == null) company.setVatPayer(false);
         return repository.save(company);
     }
 
@@ -27,7 +28,7 @@ public class CompanyService {
         if (patch.getCui() != null) existing.setCui(patch.getCui());
         if (patch.getCompanyType() != null) existing.setCompanyType(patch.getCompanyType());
         if (patch.getTaxRegime() != null) existing.setTaxRegime(patch.getTaxRegime());
-        existing.setVatPayer(patch.isVatPayer());
+        if (patch.getVatPayer() != null) existing.setVatPayer(patch.getVatPayer());
         return repository.save(existing);
     }
 }

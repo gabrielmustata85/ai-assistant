@@ -15,7 +15,7 @@ public class CompanyController {
 
     @PostMapping
     public ResponseEntity<Company> create(@RequestBody Company company) {
-        return ResponseEntity.ok(service.create(company));
+        return ResponseEntity.status(201).body(service.create(company));
     }
 
     @GetMapping("/{id}")

@@ -33,7 +33,7 @@ public class Company {
     private TaxRegime taxRegime;
 
     @Column(name = "vat_payer", nullable = false)
-    private boolean vatPayer;
+    private Boolean vatPayer;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

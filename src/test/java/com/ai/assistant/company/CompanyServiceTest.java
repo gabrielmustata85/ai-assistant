@@ -41,7 +41,26 @@ class CompanyServiceTest {
         Company result = service.update(1L, patch);
 
         assertEquals("New SRL", result.getName());
-        assertTrue(result.isVatPayer());
+        assertTrue(result.getVatPayer());
         assertEquals(TaxRegime.PROFIT_16, result.getTaxRegime());
+    }
+
+    @Test
+    void updateLeavesVatPayerUnchangedWhenOmitted() {
+        Company existing = new Company();
+        existing.setId(2L);
+        existing.setName("Existing SRL");
+        existing.setVatPayer(true);
+        when(repository.findById(2L)).thenReturn(Optional.of(existing));
+        when(repository.save(any(Company.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Company patch = new Company();
+        patch.setName("Updated Name SRL");
+        // vatPayer intentionally left null (not provided in PATCH body)
+
+        Company result = service.update(2L, patch);
+
+        assertEquals("Updated Name SRL", result.getName());
+        assertEquals(Boolean.TRUE, result.getVatPayer());
     }
 }
