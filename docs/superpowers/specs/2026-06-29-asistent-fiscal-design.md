@@ -176,9 +176,12 @@ POST   /advisor/reset             # resetează conversația
 
 ## 7. Cross-cutting
 
-- **Securitate:** Spring Security (deja prezent). MVP: autentificare simplă (API key per
-  firmă sau user/parolă). Izolare strictă pe `companyId` — fiecare firmă vede doar
-  datele ei.
+- **Securitate / multi-tenancy:** Spring Security stateless cu **JWT** (bearer token).
+  Fiecare user (`app_user`) deține una sau mai multe firme (`company.owner_user_id`).
+  Izolare strictă: `CompanyService.get(companyId)` e **punctul unic de control** care
+  verifică ownership-ul (`CompanyAccessGuard`) — pentru că facturi/angajați/cheltuieli/
+  advisor trec prin el, un user nu poate accesa datele altuia (403). Userul curent se ia
+  doar din `SecurityContext`, niciodată din URL/body. Detaliat în Plan 4.
 - **Tratarea erorilor:** dacă Claude pică sau dă JSON invalid → eroare clară, NU cifre
   inventate. Reîncercări cu `RetryInterceptor` existent.
 - **Disclaimer:** atașat fiecărui răspuns de la advisor.
