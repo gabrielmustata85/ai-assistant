@@ -20,6 +20,7 @@ import java.util.List;
 
 import static com.ai.assistant.constants.NameSpaces.PDF_DOCUMENTS_NAMESPACE;
 import static com.ai.assistant.constants.NameSpaces.SQL_SCHEMA_NAMESPACE;
+import static com.ai.assistant.constants.NameSpaces.LEGISLATION_NAMESPACE;
 
 @Service
 @Primary
@@ -181,5 +182,27 @@ public class EnhancedPineconeClient extends PineconeClient {
                 throw new IOException("Delete failed: " + response.body().string());
             }
         }
+    }
+
+    /**
+     * Search for relevant legislation based on query
+     */
+    public List<String> searchLegislation(String query) throws IOException {
+        List<Float> embedding = embeddingClient.embed(query);
+        return super.searchEmbedding(embedding, LEGISLATION_NAMESPACE);
+    }
+
+    /**
+     * Upsert legislation chunk to Pinecone
+     */
+    public void upsertLegislation(Vector vector, JSONObject metadata) throws IOException {
+        super.upsertEmbedding(vector, metadata, LEGISLATION_NAMESPACE);
+    }
+
+    /**
+     * Fetch legislation text by id
+     */
+    public String fetchLegislation(String id) throws IOException {
+        return super.fetch(id, LEGISLATION_NAMESPACE);
     }
 }
