@@ -27,6 +27,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
                 .anyRequest().authenticated())
+            .exceptionHandling(e -> e.authenticationEntryPoint(
+                (request, response, authEx) -> response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED)))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

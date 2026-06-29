@@ -1,5 +1,6 @@
 package com.ai.assistant.auth;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class AppUser {
     @Column(nullable = false, unique = true, length = 128)
     private String username;
 
+    @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 

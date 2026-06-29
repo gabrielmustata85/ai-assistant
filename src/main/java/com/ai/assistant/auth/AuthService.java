@@ -17,6 +17,9 @@ public class AuthService {
     }
 
     public AppUser register(String username, String rawPassword) {
+        if (username == null || username.isBlank() || rawPassword == null || rawPassword.isBlank()) {
+            throw new IllegalArgumentException("username and password are required");
+        }
         if (repository.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException("Username already taken");
         }
