@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class VoyageEmbeddingClientTest {
 
@@ -19,5 +20,21 @@ class VoyageEmbeddingClientTest {
         assertEquals(3, embedding.size());
         assertEquals(0.1f, embedding.get(0), 1e-6);
         assertEquals(0.3f, embedding.get(2), 1e-6);
+    }
+
+    @Test
+    void parseEmbeddingThrowsWhenDataArrayIsEmpty() {
+        VoyageEmbeddingClient client = new VoyageEmbeddingClient("test-key");
+        String json = "{\"object\":\"list\",\"data\":[],\"model\":\"voyage-3.5\"}";
+
+        assertThrows(IllegalStateException.class, () -> client.parseEmbedding(json));
+    }
+
+    @Test
+    void embedThrowsIllegalArgumentExceptionForBlankInput() throws Exception {
+        VoyageEmbeddingClient client = new VoyageEmbeddingClient("test-key");
+
+        assertThrows(IllegalArgumentException.class, () -> client.embed(null));
+        assertThrows(IllegalArgumentException.class, () -> client.embed("  "));
     }
 }
