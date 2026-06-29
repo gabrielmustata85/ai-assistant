@@ -315,6 +315,39 @@ public class DocumentIngestionService {
         }
     }
 
+    /** Ingestă un PDF de legislație în namespace-ul de legislație (RAG). */
+    public void ingestLegislationPdf(MultipartFile file) throws IOException {
+        validatePdfFile(file);
+        String text = extractTextFromPDF(file);
+        List<String> chunks = chunkTextIntelligently(text);
+        if (chunks.isEmpty()) {
+            throw new IOException("No valid text chunks could be extracted");
+        }
+        for (int i = 0; i < chunks.size(); i++) {
+            processLegislationChunk(file, chunks.get(i), i, chunks.size());
+        }
+    }
+
+    private void processLegislationChunk(MultipartFile file, String chunk, int chunkIndex, int totalChunks)
+            throws IOException {
+        if (chunk == null || chunk.trim().isEmpty()) {
+            return;
+        }
+        List<Float> embedding = embeddingClient.embed(chunk);
+        JSONObject metadata = new JSONObject();
+        metadata.put("documentId", file.getOriginalFilename());
+        metadata.put("documentType", "LEGISLATION");
+        metadata.put("chunkIndex", chunkIndex);
+        metadata.put("totalChunks", totalChunks);
+        metadata.put("textPreview", getTextPreview(chunk, TEXT_PREVIEW_LENGTH));
+        metadata.put("uploadTimestamp", System.currentTimeMillis());
+
+        Vector vector = new Vector(
+                generatePdfChunkId("legis_" + file.getOriginalFilename(), chunkIndex),
+                embedding);
+        pineconeClient.upsertLegislation(vector, metadata);
+    }
+
     private String generatePdfChunkId(String filename, int chunkIndex) {
         return String.format("pdf_%s_chunk_%d",
                 filename.replaceAll("[^a-zA-Z0-9]", "_"), chunkIndex);
