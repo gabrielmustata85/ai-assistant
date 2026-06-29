@@ -1,11 +1,14 @@
 package com.ai.assistant.company;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,12 +19,25 @@ import static org.mockito.Mockito.when;
 class CompanyServiceTest {
 
     @Mock CompanyRepository repository;
-    @InjectMocks CompanyService service;
+
+    @AfterEach
+    void clear() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authAs(Long userId) {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userId, null, List.of()));
+    }
+
+    private CompanyService service() {
+        return new CompanyService(repository, new CompanyAccessGuard());
+    }
 
     @Test
     void getThrowsWhenMissing() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
-        assertThrows(CompanyNotFoundException.class, () -> service.get(99L));
+        assertThrows(CompanyNotFoundException.class, () -> service().get(99L));
     }
 
     @Test
@@ -30,6 +46,7 @@ class CompanyServiceTest {
         existing.setId(1L);
         existing.setName("Old");
         existing.setVatPayer(false);
+        existing.setOwnerUserId(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.save(any(Company.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -38,7 +55,8 @@ class CompanyServiceTest {
         patch.setVatPayer(true);
         patch.setTaxRegime(TaxRegime.PROFIT_16);
 
-        Company result = service.update(1L, patch);
+        authAs(1L);
+        Company result = service().update(1L, patch);
 
         assertEquals("New SRL", result.getName());
         assertTrue(result.getVatPayer());
@@ -51,6 +69,7 @@ class CompanyServiceTest {
         existing.setId(2L);
         existing.setName("Existing SRL");
         existing.setVatPayer(true);
+        existing.setOwnerUserId(1L);
         when(repository.findById(2L)).thenReturn(Optional.of(existing));
         when(repository.save(any(Company.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -58,7 +77,8 @@ class CompanyServiceTest {
         patch.setName("Updated Name SRL");
         // vatPayer intentionally left null (not provided in PATCH body)
 
-        Company result = service.update(2L, patch);
+        authAs(1L);
+        Company result = service().update(2L, patch);
 
         assertEquals("Updated Name SRL", result.getName());
         assertEquals(Boolean.TRUE, result.getVatPayer());

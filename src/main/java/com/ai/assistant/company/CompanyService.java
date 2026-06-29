@@ -1,29 +1,34 @@
 package com.ai.assistant.company;
 
+import com.ai.assistant.auth.CurrentUser;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CompanyService {
 
     private final CompanyRepository repository;
+    private final CompanyAccessGuard accessGuard;
 
-    public CompanyService(CompanyRepository repository) {
+    public CompanyService(CompanyRepository repository, CompanyAccessGuard accessGuard) {
         this.repository = repository;
+        this.accessGuard = accessGuard;
     }
 
     public Company create(Company company) {
         company.setId(null);
-        if (company.getVatPayer() == null) company.setVatPayer(false);
+        company.setOwnerUserId(CurrentUser.id());   // firma aparține userului care o creează
         return repository.save(company);
     }
 
+    /** PUNCT UNIC DE CONTROL: orice acces la o firmă trece prin verificarea de ownership. */
     public Company get(Long id) {
-        return repository.findById(id).orElseThrow(() -> new CompanyNotFoundException(id));
+        Company company = repository.findById(id).orElseThrow(() -> new CompanyNotFoundException(id));
+        accessGuard.assertOwner(company.getOwnerUserId());
+        return company;
     }
 
-    /** Aplică pe entitatea existentă doar câmpurile non-null din patch. */
     public Company update(Long id, Company patch) {
-        Company existing = get(id);
+        Company existing = get(id);   // get() verifică deja ownership-ul
         if (patch.getName() != null) existing.setName(patch.getName());
         if (patch.getCui() != null) existing.setCui(patch.getCui());
         if (patch.getCompanyType() != null) existing.setCompanyType(patch.getCompanyType());

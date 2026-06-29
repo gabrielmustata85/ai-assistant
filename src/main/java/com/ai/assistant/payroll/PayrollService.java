@@ -28,6 +28,7 @@ public class PayrollService {
     }
 
     public List<Employee> employees(Long companyId) {
+        companyService.get(companyId);   // verifică ownership
         return employeeRepository.findByCompanyId(companyId);
     }
 
@@ -39,6 +40,7 @@ public class PayrollService {
     }
 
     public List<Expense> expenses(Long companyId) {
+        companyService.get(companyId);   // verifică ownership
         return expenseRepository.findByCompanyId(companyId);
     }
 }

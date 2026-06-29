@@ -17,17 +17,20 @@ public class InvoiceService {
     }
 
     public Invoice add(Long companyId, Invoice invoice) {
-        companyService.get(companyId);   // aruncă dacă firma nu există
+        companyService.get(companyId);   // aruncă dacă firma nu există sau nu e owner
         invoice.setId(null);
         invoice.setCompanyId(companyId);
         return repository.save(invoice);
     }
 
     public List<Invoice> listForCompany(Long companyId) {
+        companyService.get(companyId);   // verifică ownership
         return repository.findByCompanyId(companyId);
     }
 
     public void delete(Long id) {
+        Invoice invoice = repository.findById(id).orElseThrow();
+        companyService.get(invoice.getCompanyId());   // verifică ownership-ul firmei facturii
         repository.deleteById(id);
     }
 }
