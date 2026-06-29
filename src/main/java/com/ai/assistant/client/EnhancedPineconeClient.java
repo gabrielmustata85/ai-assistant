@@ -1,5 +1,6 @@
 package com.ai.assistant.client;
 
+import com.ai.assistant.ai.EmbeddingClient;
 import com.ai.assistant.config.ConversationContext;
 import com.ai.assistant.exceptions.PineconeSearchException;
 import com.ai.assistant.model.Vector;
@@ -25,7 +26,7 @@ import static com.ai.assistant.constants.NameSpaces.SQL_SCHEMA_NAMESPACE;
 @Slf4j
 public class EnhancedPineconeClient extends PineconeClient {
 
-    private final CopilotClient copilotClient;
+    private final EmbeddingClient embeddingClient;
     private final ConversationContext conversationContext;
     private final AIResponseHistoryService historyService;
 
@@ -34,11 +35,11 @@ public class EnhancedPineconeClient extends PineconeClient {
             @Value("${pinecone.environment}") String environment,
             @Value("${pinecone.index.name}") String indexName,
             @Value("${pinecone.api.key}") String apiKey,
-            CopilotClient copilotClient,
+            EmbeddingClient embeddingClient,
             ConversationContext conversationContext,
             AIResponseHistoryService historyService) {
         super(environment, indexName, apiKey);
-        this.copilotClient = copilotClient;
+        this.embeddingClient = embeddingClient;
         this.conversationContext = conversationContext;
         this.historyService = historyService;
     }
@@ -51,7 +52,7 @@ public class EnhancedPineconeClient extends PineconeClient {
         String context = conversationContext.getFullContext(sessionId);
         String enhancedQuery = context.isEmpty() ? question : context + "\n" + question;
 
-        List<Float> embedding = copilotClient.createEmbedding(enhancedQuery);
+        List<Float> embedding = embeddingClient.embed(enhancedQuery);
         List<String> results = super.searchEmbedding(embedding, SQL_SCHEMA_NAMESPACE);
 
         // Log to conversation history
@@ -75,7 +76,7 @@ public class EnhancedPineconeClient extends PineconeClient {
             String searchQuery = formatSearchQuery(context, question);
 
             // Generate embedding
-            List<Float> embedding = copilotClient.createEmbedding(searchQuery);
+            List<Float> embedding = embeddingClient.embed(searchQuery);
 
             // Execute search
             List<String> results = super.searchEmbedding(embedding, PDF_DOCUMENTS_NAMESPACE);

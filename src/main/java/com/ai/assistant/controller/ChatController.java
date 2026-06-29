@@ -1,6 +1,6 @@
 package com.ai.assistant.controller;
 
-import com.ai.assistant.client.CopilotClient;
+import com.ai.assistant.ai.ClaudeClient;
 import com.ai.assistant.client.EnhancedPineconeClient;
 import com.ai.assistant.config.ConversationContext;
 import com.ai.assistant.service.DocumentIngestionService;
@@ -22,18 +22,18 @@ import java.util.Map;
 public class ChatController {
 
     private final EnhancedPineconeClient pineconeClient;
-    private final CopilotClient copilotClient;
+    private final ClaudeClient claudeClient;
     private final DocumentIngestionService ingestionService;
     private final ConversationContext conversationContext;
 
     @Autowired
     public ChatController(
             EnhancedPineconeClient pineconeClient,
-            CopilotClient copilotClient,
+            ClaudeClient claudeClient,
             DocumentIngestionService ingestionService,
             ConversationContext conversationContext) {
         this.pineconeClient = pineconeClient;
-        this.copilotClient = copilotClient;
+        this.claudeClient = claudeClient;
         this.ingestionService = ingestionService;
         this.conversationContext = conversationContext;
     }
@@ -197,8 +197,7 @@ public class ChatController {
         return "pdf";
     }
 
-    private String generateSqlQueryResponse(String question, String context, List<String> relevantSchemas)
-            throws IOException {
+    private String generateSqlQueryResponse(String question, String context, List<String> relevantSchemas) {
 
         StringBuilder promptBuilder = new StringBuilder();
         promptBuilder.append("You are a SQL expert assistant. Generate a SQL query based on the user's request.\n\n");
@@ -221,11 +220,10 @@ public class ChatController {
         promptBuilder.append("Generate a SQL query that answers this question. ");
         promptBuilder.append("Explain what the query does and include the complete SQL statement.");
 
-        return copilotClient.generateResponse(promptBuilder.toString());
+        return claudeClient.generateText(promptBuilder.toString());
     }
 
-    private String generatePdfQueryResponse(String question, String context, List<String> relevantDocs)
-            throws IOException {
+    private String generatePdfQueryResponse(String question, String context, List<String> relevantDocs) {
 
         StringBuilder promptBuilder = new StringBuilder();
         promptBuilder.append("You are a helpful assistant. Answer the user's question based on the provided documents.\n\n");
@@ -247,6 +245,6 @@ public class ChatController {
         promptBuilder.append("User question: ").append(question).append("\n\n");
         promptBuilder.append("Provide a clear and accurate answer based on the documents above.");
 
-        return copilotClient.generateResponse(promptBuilder.toString());
+        return claudeClient.generateText(promptBuilder.toString());
     }
 }

@@ -1,6 +1,5 @@
 package com.ai.assistant.service;
 
-import com.ai.assistant.client.CopilotClient;
 import com.ai.assistant.model.AIResponseHistory;
 import com.ai.assistant.repository.AIResponseHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,6 @@ import java.util.stream.Collectors;
 public class AIResponseHistoryService {
 
     private final AIResponseHistoryRepository historyRepository;
-    private final CopilotClient copilotClient;
 
     public void logInteraction(String sessionId, String userQuery, String aiResponse) {
         AIResponseHistory history = new AIResponseHistory();

@@ -1,6 +1,6 @@
 package com.ai.assistant.service;
 
-import com.ai.assistant.client.CopilotClient;
+import com.ai.assistant.ai.EmbeddingClient;
 import com.ai.assistant.client.EnhancedPineconeClient;
 import com.ai.assistant.model.Vector;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -35,18 +35,18 @@ public class DocumentIngestionService {
     private static final int TEXT_PREVIEW_LENGTH = 200;
 
     private final EnhancedPineconeClient pineconeClient;
-    private final CopilotClient copilotClient;
+    private final EmbeddingClient embeddingClient;
     private final int maxPdfSizeMb;
     private final int maxChunkTokens;
 
     @Autowired
     public DocumentIngestionService(
             EnhancedPineconeClient pineconeClient,
-            CopilotClient copilotClient,
+            EmbeddingClient embeddingClient,
             @Value("${app.pdf.max-size-mb:20}") int maxPdfSizeMb,
             @Value("${app.chunk.max-tokens:5000}") int maxChunkTokens) {
         this.pineconeClient = pineconeClient;
-        this.copilotClient = copilotClient;
+        this.embeddingClient = embeddingClient;
         this.maxPdfSizeMb = maxPdfSizeMb;
         this.maxChunkTokens = maxChunkTokens;
         log.info("Initialized Document processor with max {}MB files and {} tokens/chunk",
@@ -248,7 +248,7 @@ public class DocumentIngestionService {
                 return;
             }
 
-            List<Float> embedding = copilotClient.createEmbedding(chunk);
+            List<Float> embedding = embeddingClient.embed(chunk);
             if (embedding == null || embedding.isEmpty()) {
                 throw new IOException("Failed to generate embedding for chunk");
             }
@@ -286,7 +286,7 @@ public class DocumentIngestionService {
                     statement.getDefinition()
             );
 
-            List<Float> embedding = copilotClient.createEmbedding(embeddingText);
+            List<Float> embedding = embeddingClient.embed(embeddingText);
             if (embedding == null || embedding.isEmpty()) {
                 throw new IOException("Failed to generate embedding for SQL statement");
             }

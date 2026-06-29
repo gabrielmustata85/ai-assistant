@@ -30,7 +30,7 @@ public class ClaudeClient {
         this.client = AnthropicOkHttpClient.fromEnv();
     }
 
-    /** Răspuns text liber (înlocuiește CopilotClient.generateResponse). */
+    /** Răspuns text liber pentru interogări generale. */
     public String generateText(String prompt) {
         MessageCreateParams params = MessageCreateParams.builder()
                 .model(MODEL)
