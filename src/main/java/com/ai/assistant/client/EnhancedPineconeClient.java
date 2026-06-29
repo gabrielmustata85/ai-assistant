@@ -203,6 +203,13 @@ public class EnhancedPineconeClient extends PineconeClient {
      * Fetch legislation text by id
      */
     public String fetchLegislation(String id) throws IOException {
-        return super.fetch(id, LEGISLATION_NAMESPACE);
+        String raw = super.fetch(id, LEGISLATION_NAMESPACE);
+        if (raw == null || raw.isBlank()) return raw;
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject(raw);
+            return obj.optString("text", raw);
+        } catch (org.json.JSONException e) {
+            return raw; // not JSON / no text field — return as-is
+        }
     }
 }

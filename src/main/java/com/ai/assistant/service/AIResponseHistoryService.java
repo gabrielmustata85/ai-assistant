@@ -28,6 +28,17 @@ public class AIResponseHistoryService {
         historyRepository.save(history);
     }
 
+    public void logInteraction(String sessionId, Long companyId, String userQuery, String aiResponse, String dataGaps) {
+        AIResponseHistory history = new AIResponseHistory();
+        history.setSessionId(sessionId);
+        history.setCompanyId(companyId);
+        history.setUserQuery(userQuery);
+        history.setAiResponse(aiResponse);
+        history.setDataGaps(dataGaps);
+        history.setTimestamp(LocalDateTime.now());
+        historyRepository.save(history);
+    }
+
     public void logCorrection(Long responseId, String correctedResponse) {
         historyRepository.findById(responseId).ifPresent(history -> {
             history.setWasCorrected(true);

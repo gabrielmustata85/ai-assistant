@@ -339,6 +339,7 @@ public class DocumentIngestionService {
         metadata.put("documentType", "LEGISLATION");
         metadata.put("chunkIndex", chunkIndex);
         metadata.put("totalChunks", totalChunks);
+        metadata.put("text", chunk);
         metadata.put("textPreview", getTextPreview(chunk, TEXT_PREVIEW_LENGTH));
         metadata.put("uploadTimestamp", System.currentTimeMillis());
 

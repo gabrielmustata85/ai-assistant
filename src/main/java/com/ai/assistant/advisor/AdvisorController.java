@@ -20,6 +20,9 @@ public class AdvisorController {
     public ResponseEntity<ClaudeResponse> ask(
             @RequestHeader("X-Session-ID") String sessionId,
             @RequestBody Map<String, Object> request) {
+        if (request.get("companyId") == null || request.get("question") == null) {
+            return ResponseEntity.badRequest().build();
+        }
         Long companyId = Long.valueOf(String.valueOf(request.get("companyId")));
         String question = String.valueOf(request.get("question"));
         return ResponseEntity.ok(service.ask(sessionId, companyId, question));

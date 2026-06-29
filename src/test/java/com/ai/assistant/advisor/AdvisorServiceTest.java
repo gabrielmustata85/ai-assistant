@@ -44,7 +44,7 @@ class AdvisorServiceTest {
         assertSame(expected, result);
         verify(pineconeClient).searchLegislation(anyString());
         verify(claudeClient).ask("PROMPT");
-        verify(historyService).logInteraction(eq("s1"), eq("Ce taxe am?"), anyString());
+        verify(historyService).logInteraction(eq("s1"), eq(1L), eq("Ce taxe am?"), anyString(), any());
         verify(conversationContext).addMessage(eq("s1"), contains("Ce taxe am?"));
     }
 }

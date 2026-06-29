@@ -38,8 +38,9 @@ public class AdvisorService {
     }
 
     public ClaudeResponse ask(String sessionId, Long companyId, String question) {
-        conversationContext.addMessage(sessionId, "User: " + question);
+        // Fix 3: read context BEFORE adding the current question to avoid duplication in prompt
         String conversation = conversationContext.getFullContext(sessionId);
+        conversationContext.addMessage(sessionId, "User: " + question);
         String companyContext = contextBuilder.build(companyId);
 
         List<String> legislation = new ArrayList<>();
@@ -57,9 +58,46 @@ public class AdvisorService {
         String prompt = promptBuilder.build(question, conversation, companyContext, legislation);
         ClaudeResponse response = claudeClient.ask(prompt);
 
-        conversationContext.addMessage(sessionId, "AI: " + summarize(response));
-        historyService.logInteraction(sessionId, question, summarize(response));
+        // Fix 2: build full AI text for persistence; use short summary only for conversation memory
+        String aiText = buildAuditText(response);
+        String gaps = (response.dataGaps() == null || response.dataGaps().isEmpty())
+                ? null : String.join(" | ", response.dataGaps());
+        String summary = summarize(response);
+
+        conversationContext.addMessage(sessionId, "AI: " + summary);
+        historyService.logInteraction(sessionId, companyId, question, aiText, gaps);
         return response;
+    }
+
+    private String buildAuditText(ClaudeResponse r) {
+        StringBuilder sb = new StringBuilder();
+        if (r.disclaimer() != null && !r.disclaimer().isBlank()) {
+            sb.append("DISCLAIMER: ").append(r.disclaimer()).append("\n\n");
+        }
+        if (r.estimari() != null && !r.estimari().isEmpty()) {
+            sb.append("ESTIMĂRI:\n");
+            for (ClaudeResponse.Estimare e : r.estimari()) {
+                sb.append("  - ").append(e.tipTaxa())
+                  .append(": ").append(e.suma())
+                  .append(" RON (").append(e.perioada()).append(")\n");
+            }
+            sb.append("\n");
+        }
+        if (r.termene() != null && !r.termene().isEmpty()) {
+            sb.append("TERMENE:\n");
+            for (ClaudeResponse.Termen t : r.termene()) {
+                sb.append("  - ").append(t.obligatie())
+                  .append(" — scadenta: ").append(t.scadenta()).append("\n");
+            }
+            sb.append("\n");
+        }
+        if (r.recomandari() != null && !r.recomandari().isEmpty()) {
+            sb.append("RECOMANDĂRI:\n");
+            for (ClaudeResponse.Recomandare rec : r.recomandari()) {
+                sb.append("  - ").append(rec.text()).append("\n");
+            }
+        }
+        return sb.toString().trim();
     }
 
     public ClaudeResponse obligations(Long companyId) {
