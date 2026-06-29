@@ -39,6 +39,12 @@ public class AIResponseHistory {
     @Column(name = "correction_timestamp")
     private LocalDateTime correctionTimestamp;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
+    @Column(name = "data_gaps", columnDefinition = "TEXT")
+    private String dataGaps;
+
     @Column(name = "embedding_vector", columnDefinition = "TEXT")
     private String embeddingVector; // Optional: store embedding for similarity search
 
