@@ -105,8 +105,9 @@ public class AdvisorService {
 
     public ClaudeResponse obligations(Long companyId) {
         String today = java.time.LocalDate.now().toString();
-        String question = ("""
-                Azi este %s. Pe baza datelor firmei (facturi, salarii, cheltuieli, extrase bancare), \
+        // Atenție: textul conține % literali (procente) — NU folosi String.formatted aici; concatenăm data.
+        String question = "Azi este " + today + ". " + """
+                Pe baza datelor firmei (facturi, salarii, cheltuieli, extrase bancare), \
                 estimează TOATE taxele și contribuțiile pe care firma le are de plătit în perioada următoare.
                 - Include OBLIGATORIU taxele pe salarii calculate din fondul de salarii brut lunar al \
                 angajaților activi (CAS 25%, CASS 10%, impozit pe venit 10%, CAM 2.25% — aplicate conform \
@@ -119,8 +120,7 @@ public class AdvisorService {
                 „dacă mai adaugi cheltuieli deductibile de ~X lei, impozitul scade cu ~Y lei” sau \
                 „dacă mai facturezi ~Z lei până la finalul trimestrului, ...”. Pune efectul în lei în `impactEstimat`.
                 - Dacă lipsesc date esențiale (nr. angajați, salarii etc.), cere-le scurt în `data_gaps`.
-                - În `raspuns` scrie pe scurt care e următoarea taxă de plătit și până când.\
-                """).formatted(today);
+                - În `raspuns` scrie pe scurt care e următoarea taxă de plătit și până când.""";
         return ask("obligations-" + companyId, companyId, question);
     }
 
