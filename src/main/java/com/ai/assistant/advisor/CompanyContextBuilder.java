@@ -1,5 +1,8 @@
 package com.ai.assistant.advisor;
 
+import com.ai.assistant.bank.BankService;
+import com.ai.assistant.bank.BankTransaction;
+import com.ai.assistant.bank.TxnDirection;
 import com.ai.assistant.company.Company;
 import com.ai.assistant.company.CompanyService;
 import com.ai.assistant.invoicing.Invoice;
@@ -9,21 +12,27 @@ import com.ai.assistant.payroll.Expense;
 import com.ai.assistant.payroll.PayrollService;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
 public class CompanyContextBuilder {
 
+    private static final int MAX_BANK_TXN = 20;
+
     private final CompanyService companyService;
     private final InvoiceService invoiceService;
     private final PayrollService payrollService;
+    private final BankService bankService;
 
     public CompanyContextBuilder(CompanyService companyService,
                                  InvoiceService invoiceService,
-                                 PayrollService payrollService) {
+                                 PayrollService payrollService,
+                                 BankService bankService) {
         this.companyService = companyService;
         this.invoiceService = invoiceService;
         this.payrollService = payrollService;
+        this.bankService = bankService;
     }
 
     public String build(Long companyId) {
@@ -68,6 +77,26 @@ public class CompanyContextBuilder {
               .append(" | ").append(x.getCategory())
               .append(" | sumă ").append(x.getAmount())
               .append(" | deductibil ").append(x.isDeductible())
+              .append("\n");
+        }
+        sb.append("\n");
+
+        List<BankTransaction> txns = bankService.list(companyId);
+        BigDecimal totalIn = BigDecimal.ZERO;
+        BigDecimal totalOut = BigDecimal.ZERO;
+        for (BankTransaction t : txns) {
+            if (t.getDirection() == TxnDirection.IN) totalIn = totalIn.add(t.getAmount());
+            else totalOut = totalOut.add(t.getAmount());
+        }
+        sb.append("TRANZACȚII BANCARE (").append(txns.size())
+          .append(" | total intrări ").append(totalIn)
+          .append(" | total ieșiri ").append(totalOut).append("):\n");
+        for (BankTransaction t : txns.stream().limit(MAX_BANK_TXN).toList()) {
+            sb.append("- ").append(t.getTxnDate())
+              .append(" | ").append(t.getDirection())
+              .append(" | sumă ").append(t.getAmount())
+              .append(" | ").append(t.getDescription())
+              .append(t.getCounterparty() != null ? " | " + t.getCounterparty() : "")
               .append("\n");
         }
 

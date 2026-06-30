@@ -21,20 +21,30 @@ public class InvoiceService {
         this.pdfParser = pdfParser;
     }
 
-    /** Extrage datele unei facturi dintr-un PDF (nu o salvează — userul confirmă apoi). */
-    public ParsedInvoice parsePdf(Long companyId, MultipartFile file) throws IOException {
+    /** Extrage TOATE facturile dintr-un PDF (poate conține mai multe). Nu salvează — userul confirmă. */
+    public List<ParsedInvoice> parsePdf(Long companyId, MultipartFile file) throws IOException {
         companyService.get(companyId);   // verifică ownership înainte de orice
         return pdfParser.parse(file);
     }
 
-    /** Extrage datele din mai multe PDF-uri; per fișier întoarce ori datele, ori eroarea. */
+    /**
+     * Extrage din mai multe PDF-uri, fiecare putând conține mai multe facturi.
+     * Întoarce o listă plată: câte un rezultat per factură găsită (sau un rezultat de eroare per fișier).
+     */
     public List<BatchParseResult<ParsedInvoice>> parsePdfBatch(Long companyId, MultipartFile[] files) {
         companyService.get(companyId);   // verifică ownership o singură dată
         List<BatchParseResult<ParsedInvoice>> results = new java.util.ArrayList<>();
         for (MultipartFile file : files) {
             String name = file.getOriginalFilename();
             try {
-                results.add(BatchParseResult.ok(name, pdfParser.parse(file)));
+                List<ParsedInvoice> invoices = pdfParser.parse(file);
+                if (invoices.isEmpty()) {
+                    results.add(BatchParseResult.failed(name, "Nicio factură găsită în document."));
+                } else {
+                    for (ParsedInvoice inv : invoices) {
+                        results.add(BatchParseResult.ok(name, inv));
+                    }
+                }
             } catch (Exception e) {
                 results.add(BatchParseResult.failed(name, e.getMessage()));
             }

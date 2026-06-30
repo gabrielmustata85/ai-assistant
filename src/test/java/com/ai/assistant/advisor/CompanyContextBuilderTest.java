@@ -1,5 +1,6 @@
 package com.ai.assistant.advisor;
 
+import com.ai.assistant.bank.BankService;
 import com.ai.assistant.company.*;
 import com.ai.assistant.invoicing.*;
 import com.ai.assistant.payroll.*;
@@ -22,6 +23,7 @@ class CompanyContextBuilderTest {
     @Mock CompanyService companyService;
     @Mock InvoiceService invoiceService;
     @Mock PayrollService payrollService;
+    @Mock BankService bankService;
     @InjectMocks CompanyContextBuilder builder;
 
     @Test
@@ -47,6 +49,7 @@ class CompanyContextBuilderTest {
         e.setGrossSalary(new BigDecimal("5000.00"));
         when(payrollService.employees(1L)).thenReturn(List.of(e));
         when(payrollService.expenses(1L)).thenReturn(List.of());
+        when(bankService.list(1L)).thenReturn(List.of());
 
         String ctx = builder.build(1L);
 
