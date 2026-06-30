@@ -2,9 +2,9 @@
 // Folosită de UrgencyBadge, de scadențarul din Dashboard și de orice altă pagină cu termene.
 
 export const URGENCY_COLORS = {
-  danger: '#C2410C', // ≤ 7 zile sau depășit
-  amber: '#B8651B',  // 8–14 zile
-  calm: '#1F6F5C',   // > 14 zile (verde accent)
+  danger: '#C73A2B', // ≤ 7 zile sau depășit
+  amber: '#B5611A',  // 8–14 zile
+  calm: '#10916E',   // > 14 zile (verde accent)
 }
 
 // Extrage o dată (YYYY-MM-DD sau DD.MM.YYYY / DD/MM/YYYY) dintr-un text de scadență.

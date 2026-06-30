@@ -6,7 +6,7 @@ import { useToast } from '../components/Toast.jsx'
 import UrgencyBadge from '../components/UrgencyBadge.jsx'
 import { parseDeadline, daysUntil, urgencyColor, URGENCY_COLORS } from '../lib/urgency.js'
 
-const INK = '#10243A'
+const INK = '#0B1B2E'
 const ACCENT = URGENCY_COLORS.calm
 const HORIZON = 45 // câte zile arată scadențarul
 
@@ -83,13 +83,13 @@ export default function Dashboard() {
   const nextDays = next?.days
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-8 max-w-3xl mx-auto">
       {/* Antet firmă */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="font-display font-bold text-2xl text-ink leading-tight">{selectedCompany.name}</h1>
-          <p className="text-xs text-muted mt-1">
-            <span className="font-mono">{selectedCompany.cui}</span>
+          <h1 className="font-display font-bold text-3xl text-ink leading-tight">{selectedCompany.name}</h1>
+          <p className="text-xs text-muted mt-1.5 uppercase tracking-wide">
+            <span className="font-mono normal-case">{selectedCompany.cui}</span>
             {selectedCompany.taxRegime ? <> · {selectedCompany.taxRegime.replace('_', ' ')}</> : null}
             {selectedCompany.vatPayer ? ' · plătitor TVA' : ''}
           </p>
@@ -97,47 +97,47 @@ export default function Dashboard() {
         <button
           onClick={loadObligations}
           disabled={loadingObl}
-          className="shrink-0 border border-hairline text-muted hover:bg-paper hover:text-ink text-sm font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+          className="shrink-0 bg-ink text-white hover:bg-inkSoft text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
         >
           {loadingObl ? 'Se calculează…' : '↻ Recalculează'}
         </button>
       </div>
 
-      {/* EROU — De plată + scadențar */}
-      <div className="bg-white border border-hairline rounded-xl overflow-hidden mb-4">
-        <div className="h-1" style={{ backgroundColor: nextDays != null ? urgencyColor(nextDays) : ACCENT }} />
-        <div className="p-6">
+      {/* EROU — De plată + scadențar (bloc întunecat, contrast puternic) */}
+      <div className="bg-ink rounded-2xl overflow-hidden mb-4 shadow-[0_10px_40px_-12px_rgba(11,27,46,0.5)]">
+        <div className="h-1.5" style={{ backgroundColor: nextDays != null ? urgencyColor(nextDays) : ACCENT }} />
+        <div className="p-7">
           {loadingObl && !obligations ? (
-            <p className="text-sm text-muted py-6">Se analizează datele firmei și se estimează taxele…</p>
+            <p className="text-sm text-onDarkMuted py-6">Se analizează datele firmei și se estimează taxele…</p>
           ) : !obligations ? (
-            <p className="text-sm text-muted py-6">Nu s-au putut calcula obligațiile. Apasă „Recalculează”.</p>
+            <p className="text-sm text-onDarkMuted py-6">Nu s-au putut calcula obligațiile. Apasă „Recalculează”.</p>
           ) : totalDue > 0 ? (
             <>
-              <p className="text-xs text-muted uppercase tracking-[0.12em] mb-2">De plată în perioada următoare</p>
-              <div className="flex items-baseline gap-2">
-                <span className="font-display font-bold text-ink tabular-nums" style={{ fontSize: '2.75rem', lineHeight: 1 }}>
+              <p className="text-[11px] text-onDarkMuted uppercase tracking-[0.16em] mb-3">De plată în perioada următoare</p>
+              <div className="flex items-baseline gap-2.5">
+                <span className="font-display font-bold text-white tabular-nums" style={{ fontSize: '3.5rem', lineHeight: 0.95 }}>
                   {lei(totalDue)}
                 </span>
-                <span className="text-base text-muted">lei</span>
+                <span className="text-lg text-onDarkMuted font-medium">lei</span>
               </div>
 
               {next && (
-                <Scadentar markers={markers} next={next} />
+                <Scadentar markers={markers} next={next} dark />
               )}
 
               {obligations.raspuns && (
-                <p className="text-sm text-muted mt-4 leading-relaxed border-t border-hairline pt-3">{obligations.raspuns}</p>
+                <p className="text-sm text-onDarkMuted mt-5 leading-relaxed border-t border-white/10 pt-4">{obligations.raspuns}</p>
               )}
             </>
           ) : (
-            <p className="text-sm text-ink leading-relaxed py-2">{obligations.raspuns}</p>
+            <p className="text-sm text-onDark leading-relaxed py-2">{obligations.raspuns}</p>
           )}
         </div>
       </div>
 
       {/* Defalcare estimată — stil registru */}
       {estimari.length > 0 && (
-        <div className="bg-white border border-hairline rounded-xl p-5 mb-4">
+        <div className="bg-white border border-hairline rounded-2xl p-5 mb-4 shadow-sm">
           <h2 className="font-display font-semibold text-sm text-ink mb-3">Defalcare estimată</h2>
           <ul>
             {estimari.map((e, i) => (
@@ -155,7 +155,7 @@ export default function Dashboard() {
 
       {/* Cum scazi taxele */}
       {recomandari.length > 0 && (
-        <div className="bg-white border border-hairline rounded-xl p-5 mb-4">
+        <div className="bg-white border border-hairline rounded-2xl p-5 mb-4 shadow-sm">
           <h2 className="font-display font-semibold text-sm text-ink mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: ACCENT }} /> Cum poți scădea taxele
           </h2>
@@ -192,7 +192,7 @@ export default function Dashboard() {
       )}
 
       {/* Datele firmei — bandă discretă, subordonată eroului */}
-      <div className="flex flex-wrap items-stretch gap-x-8 gap-y-3 bg-white border border-hairline rounded-xl px-5 py-4">
+      <div className="flex flex-wrap items-stretch gap-x-8 gap-y-3 bg-white border border-hairline rounded-2xl px-5 py-4 shadow-sm">
         <MiniStat label="Facturi" value={invoiceData.length} />
         <Divider />
         <MiniStat label="Total facturat" value={`${lei(totalGross)} lei`} mono />
@@ -205,18 +205,23 @@ export default function Dashboard() {
   )
 }
 
-function Scadentar({ markers, next }) {
+function Scadentar({ markers, next, dark }) {
   const within = markers.filter(m => m.days != null && m.days <= HORIZON + 5)
   const pos = days => `${Math.min(Math.max(days, 0), HORIZON) / HORIZON * 100}%`
-  const nextColor = urgencyColor(next.days)
   const urgent = next.days != null && next.days <= 7
 
+  const lineColor = dark ? 'rgba(255,255,255,0.18)' : '#D5DBE2'
+  const todayDot = dark ? '#FFFFFF' : INK
+  const ringColor = dark ? '#0B1B2E' : '#FFFFFF'
+  const labelCls = dark ? 'text-onDarkMuted' : 'text-muted'
+  const calloutCls = dark ? 'text-onDark' : 'text-ink'
+
   return (
-    <div className="mt-5">
+    <div className="mt-6">
       {/* Callout pe scadența cea mai apropiată */}
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm text-ink">
-          {next.obligatie ? <span className="font-medium">{next.obligatie}</span> : 'Următoarea scadență'}
+        <span className={`text-sm ${calloutCls}`}>
+          {next.obligatie ? <span className="font-semibold">{next.obligatie}</span> : 'Următoarea scadență'}
           {' · '}
           <span className="font-mono text-xs">{next.scadenta}</span>
         </span>
@@ -227,38 +232,32 @@ function Scadentar({ markers, next }) {
       {within.length > 0 ? (
         <>
           <div className="relative h-8">
-            {/* linia */}
-            <div className="absolute left-0 right-0 top-1/2 h-px" style={{ backgroundColor: '#E2E6E1' }} />
-            {/* punct „azi” */}
-            <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ left: 0, backgroundColor: INK }} />
-            {/* markeri scadențe */}
+            <div className="absolute left-0 right-0 top-1/2 h-px" style={{ backgroundColor: lineColor }} />
+            <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ left: 0, backgroundColor: todayDot }} />
             {within.map((m, i) => {
               const color = urgencyColor(m.days)
               const isUrgent = m.days != null && m.days <= 7
               return (
                 <div key={i} className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: pos(m.days) }}>
                   {isUrgent && (
-                    <span
-                      className="absolute inset-0 rounded-full animate-ping motion-reduce:hidden"
-                      style={{ backgroundColor: color, opacity: 0.35 }}
-                    />
+                    <span className="absolute inset-0 rounded-full animate-ping motion-reduce:hidden" style={{ backgroundColor: color, opacity: 0.4 }} />
                   )}
-                  <span className="relative block w-2.5 h-2.5 rounded-full ring-2 ring-white" style={{ backgroundColor: color }} title={`${m.obligatie || ''} · ${m.scadenta}`} />
+                  <span className="relative block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 0 2px ${ringColor}` }} title={`${m.obligatie || ''} · ${m.scadenta}`} />
                 </div>
               )
             })}
           </div>
-          <div className="flex justify-between text-[10px] uppercase tracking-wide text-muted mt-0.5">
+          <div className={`flex justify-between text-[10px] uppercase tracking-wide mt-0.5 ${labelCls}`}>
             <span>azi</span>
             <span>{HORIZON} zile</span>
           </div>
         </>
       ) : (
-        <p className="text-xs text-muted">Scadențe estimate dincolo de {HORIZON} de zile.</p>
+        <p className={`text-xs ${labelCls}`}>Scadențe estimate dincolo de {HORIZON} de zile.</p>
       )}
 
       {urgent && (
-        <p className="text-xs mt-2" style={{ color: nextColor }}>
+        <p className="text-xs mt-2 font-medium" style={{ color: dark ? '#FF8A6B' : urgencyColor(next.days) }}>
           Atenție: scadența cea mai apropiată e foarte aproape.
         </p>
       )}

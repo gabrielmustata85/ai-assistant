@@ -5,10 +5,18 @@
 @layer base {
   body {
     font-family: "IBM Plex Sans", sans-serif;
-    background-color: #F6F7F4;
-    color: #10243A;
+    background-color: #EBEEF2;
+    color: #0B1B2E;
+    -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4 {
     font-family: "Space Grotesk", sans-serif;
+    letter-spacing: -0.02em;
   }
+  ::selection {
+    background-color: #10916E;
+    color: #fff;
+  }
+  .scroll-dark::-webkit-scrollbar { width: 8px; }
+  .scroll-dark::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
 }

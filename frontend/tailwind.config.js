@@ -4,15 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: '#10243A',
-        paper: '#F6F7F4',
+        ink: '#0B1B2E',        // near-black navy — chrome & text
+        inkSoft: '#13263D',    // panels on dark
+        paper: '#EBEEF2',      // cool grey workspace (contrast vs. white cards)
         surface: '#FFFFFF',
-        accent: '#1F6F5C',
-        accentHover: '#185847',
-        amber: '#B8651B',
-        muted: '#5C6B73',
-        hairline: '#E2E6E1',
-        danger: '#B23A3A',
+        accent: '#10916E',     // vivid emerald
+        accentHover: '#0C7257',
+        amber: '#B5611A',
+        muted: '#586675',
+        onDark: '#E6ECF2',     // primary text on ink
+        onDarkMuted: '#8597A8',// secondary text on ink
+        hairline: '#D5DBE2',   // crisp line
+        danger: '#C73A2B',
       },
       fontFamily: {
         display: ['"Space Grotesk"', 'sans-serif'],
