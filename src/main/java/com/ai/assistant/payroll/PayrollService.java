@@ -16,15 +16,18 @@ public class PayrollService {
     private final ExpenseRepository expenseRepository;
     private final CompanyService companyService;
     private final ExpensePdfParser expensePdfParser;
+    private final EmployeePdfParser employeePdfParser;
 
     public PayrollService(EmployeeRepository employeeRepository,
                           ExpenseRepository expenseRepository,
                           CompanyService companyService,
-                          ExpensePdfParser expensePdfParser) {
+                          ExpensePdfParser expensePdfParser,
+                          EmployeePdfParser employeePdfParser) {
         this.employeeRepository = employeeRepository;
         this.expenseRepository = expenseRepository;
         this.companyService = companyService;
         this.expensePdfParser = expensePdfParser;
+        this.employeePdfParser = employeePdfParser;
     }
 
     public Employee addEmployee(Long companyId, Employee employee) {
@@ -82,6 +85,28 @@ public class PayrollService {
                 } else {
                     for (ParsedExpense ex : expenses) {
                         results.add(BatchParseResult.ok(name, ex));
+                    }
+                }
+            } catch (Exception e) {
+                results.add(BatchParseResult.failed(name, e.getMessage()));
+            }
+        }
+        return results;
+    }
+
+    /** Extrage angajați din mai multe state de plată PDF, fiecare cu mai mulți; listă plată per angajat. */
+    public List<BatchParseResult<ParsedEmployee>> parseEmployeePdfBatch(Long companyId, MultipartFile[] files) {
+        companyService.get(companyId);
+        List<BatchParseResult<ParsedEmployee>> results = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String name = file.getOriginalFilename();
+            try {
+                List<ParsedEmployee> employees = employeePdfParser.parse(file);
+                if (employees.isEmpty()) {
+                    results.add(BatchParseResult.failed(name, "Niciun angajat găsit în document."));
+                } else {
+                    for (ParsedEmployee emp : employees) {
+                        results.add(BatchParseResult.ok(name, emp));
                     }
                 }
             } catch (Exception e) {

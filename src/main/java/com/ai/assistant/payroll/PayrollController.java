@@ -74,4 +74,11 @@ public class PayrollController {
                                                                 @RequestParam("files") MultipartFile[] files) {
         return ResponseEntity.ok(service.parseExpensePdfBatch(companyId, files));
     }
+
+    /** Încarcă unul sau mai multe state de plată PDF; Claude extrage angajații (userul confirmă). */
+    @PostMapping("/companies/{companyId}/employees/parse-batch")
+    public ResponseEntity<List<BatchParseResult<ParsedEmployee>>> parseEmployeeBatch(@PathVariable Long companyId,
+                                                                @RequestParam("files") MultipartFile[] files) {
+        return ResponseEntity.ok(service.parseEmployeePdfBatch(companyId, files));
+    }
 }

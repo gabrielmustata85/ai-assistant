@@ -1,10 +1,19 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useCompany } from '../components/Layout.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
+import BatchReviewModal from '../components/BatchReviewModal.jsx'
 
 const EMPTY = { fullName: '', cnp: '', grossSalary: '', position: '', startDate: '', active: true }
+
+const EMPLOYEE_COLUMNS = [
+  { key: 'fullName', label: 'Nume complet', type: 'text' },
+  { key: 'position', label: 'Funcție', type: 'text' },
+  { key: 'cnp', label: 'CNP', type: 'text', mono: true },
+  { key: 'grossSalary', label: 'Salariu brut (LEI)', type: 'number', mono: true },
+  { key: 'startDate', label: 'Data angajării', type: 'date', mono: true },
+]
 
 export default function Angajati() {
   const { selectedCompany } = useCompany()
@@ -14,6 +23,14 @@ export default function Angajati() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
+  const [parsing, setParsing] = useState(false)
+  const pdfInputRef = useRef(null)
+
+  // Batch state
+  const [batchItems, setBatchItems] = useState(null)
+  const [showBatchModal, setShowBatchModal] = useState(false)
+  const [batchSaving, setBatchSaving] = useState(false)
+  const [batchProgress, setBatchProgress] = useState(null)
 
   useEffect(() => {
     if (!selectedCompany) return
@@ -21,6 +38,68 @@ export default function Angajati() {
       .then(d => setEmployees(d || []))
       .catch(err => addToast(err.message))
   }, [selectedCompany?.id])
+
+  async function handlePdfUpload(e) {
+    const files = Array.from(e.target.files || [])
+    if (pdfInputRef.current) pdfInputRef.current.value = ''
+    if (files.length === 0) return
+
+    // Un stat de plată conține de obicei mai mulți angajați → mereu prin tabelul de verificare.
+    setParsing(true)
+    try {
+      const fd = new FormData()
+      files.forEach(f => fd.append('files', f))
+      const results = await apiFetch(
+        `/companies/${selectedCompany.id}/employees/parse-batch`,
+        { method: 'POST', body: fd },
+        token
+      )
+      setBatchItems(results)
+      setShowBatchModal(true)
+    } catch (err) {
+      const msg = err.message || 'Eroare la extragerea datelor.'
+      addToast(`${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`, 'error')
+    } finally {
+      setParsing(false)
+    }
+  }
+
+  async function handleBatchSave(rows) {
+    setBatchSaving(true)
+    setBatchProgress({ done: 0, total: rows.length })
+    let saved = 0
+    for (const row of rows) {
+      try {
+        const body = {
+          fullName: row.fullName || '',
+          cnp: row.cnp || '',
+          grossSalary: parseFloat(row.grossSalary) || 0,
+          position: row.position || '',
+          startDate: row.startDate || null,
+          active: true,
+        }
+        const emp = await apiFetch(`/companies/${selectedCompany.id}/employees`, {
+          method: 'POST', body: JSON.stringify(body),
+        }, token)
+        setEmployees(prev => [...prev, emp])
+        saved++
+        setBatchProgress({ done: saved, total: rows.length })
+      } catch (err) {
+        addToast(`Eroare la salvarea angajatului: ${err.message}`, 'error')
+      }
+    }
+    setBatchSaving(false)
+    setBatchProgress(null)
+    setShowBatchModal(false)
+    setBatchItems(null)
+    addToast(`${saved} angajat/angajați salvați cu succes!`, 'success')
+  }
+
+  function closeBatchModal() {
+    if (batchSaving) return
+    setShowBatchModal(false)
+    setBatchItems(null)
+  }
 
   async function handleAdd(e) {
     e.preventDefault()
@@ -58,10 +137,28 @@ export default function Angajati() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-bold text-2xl text-ink">Angajați</h1>
-        <button onClick={() => setShowForm(v => !v)}
-          className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-          {showForm ? 'Anulează' : '＋ Adaugă angajat'}
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept="application/pdf"
+            multiple
+            className="hidden"
+            onChange={handlePdfUpload}
+          />
+          <button
+            type="button"
+            disabled={parsing}
+            onClick={() => pdfInputRef.current?.click()}
+            className="border border-accent text-accent hover:bg-accent hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+          >
+            {parsing ? 'Se extrag datele…' : '↑ Încarcă stat de plată'}
+          </button>
+          <button onClick={() => setShowForm(v => !v)}
+            className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+            {showForm ? 'Anulează' : '＋ Adaugă angajat'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -159,6 +256,17 @@ export default function Angajati() {
           </table>
         )}
       </div>
+
+      {showBatchModal && batchItems && (
+        <BatchReviewModal
+          items={batchItems}
+          columnDefs={EMPLOYEE_COLUMNS}
+          onSave={handleBatchSave}
+          onClose={closeBatchModal}
+          saving={batchSaving}
+          saveProgress={batchProgress}
+        />
+      )}
     </div>
   )
 }
