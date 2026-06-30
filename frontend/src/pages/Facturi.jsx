@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useCompany } from '../components/Layout.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
@@ -18,6 +18,9 @@ export default function Facturi() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [parsing, setParsing] = useState(false)
+  const [fromPdf, setFromPdf] = useState(false)
+  const pdfInputRef = useRef(null)
 
   useEffect(() => {
     if (!selectedCompany) return
@@ -41,6 +44,7 @@ export default function Facturi() {
       }, token)
       setInvoices(prev => [...prev, inv])
       setForm(EMPTY_FORM)
+      setFromPdf(false)
       setShowForm(false)
       addToast('Factură adăugată!', 'success')
     } catch (err) {
@@ -61,6 +65,48 @@ export default function Facturi() {
     }
   }
 
+  async function handlePdfUpload(e) {
+    const file = e.target.files?.[0]
+    if (!pdfInputRef.current) return
+    pdfInputRef.current.value = ''
+    if (!file) return
+
+    setParsing(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const parsed = await apiFetch(
+        `/companies/${selectedCompany.id}/invoices/parse`,
+        { method: 'POST', body: fd },
+        token
+      )
+      setForm({
+        direction: parsed.direction || 'RECEIVED',
+        invoiceNumber: parsed.invoiceNumber || '',
+        partnerName: parsed.partnerName || '',
+        partnerCui: parsed.partnerCui || '',
+        issueDate: parsed.issueDate || '',
+        dueDate: parsed.dueDate || '',
+        netAmount: parsed.netAmount != null ? String(parsed.netAmount) : '',
+        vatAmount: parsed.vatAmount != null ? String(parsed.vatAmount) : '',
+        grossAmount: parsed.grossAmount != null ? String(parsed.grossAmount) : '',
+        category: parsed.category || '',
+        deductible: Boolean(parsed.deductible),
+      })
+      setFromPdf(true)
+      setShowForm(true)
+      addToast('Date extrase! Verifică și salvează factura.', 'success')
+    } catch (err) {
+      const msg = err.message || 'Eroare la extragerea datelor.'
+      addToast(
+        `${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`,
+        'error'
+      )
+    } finally {
+      setParsing(false)
+    }
+  }
+
   if (!selectedCompany) return (
     <div className="p-6 text-center text-muted text-sm">Selectează o firmă.</div>
   )
@@ -69,12 +115,29 @@ export default function Facturi() {
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-bold text-2xl text-ink">Facturi</h1>
-        <button
-          onClick={() => setShowForm(v => !v)}
-          className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          {showForm ? 'Anulează' : '＋ Adaugă factură'}
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={handlePdfUpload}
+          />
+          <button
+            type="button"
+            disabled={parsing}
+            onClick={() => pdfInputRef.current?.click()}
+            className="border border-accent text-accent hover:bg-accent hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+          >
+            {parsing ? 'Se extrage datele…' : '↑ Încarcă PDF'}
+          </button>
+          <button
+            onClick={() => setShowForm(v => !v)}
+            className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            {showForm ? 'Anulează' : '＋ Adaugă factură'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -143,13 +206,13 @@ export default function Facturi() {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setShowForm(false)}
+            <button type="button" onClick={() => { setShowForm(false); setFromPdf(false) }}
               className="border border-hairline rounded-lg px-4 py-2 text-sm text-muted hover:bg-paper transition-colors">
               Anulează
             </button>
             <button type="submit" disabled={saving}
               className="bg-accent hover:bg-accentHover text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
-              {saving ? 'Se salvează...' : 'Salvează'}
+              {saving ? 'Se salvează...' : fromPdf ? 'Verifică și salvează' : 'Salvează'}
             </button>
           </div>
         </form>
