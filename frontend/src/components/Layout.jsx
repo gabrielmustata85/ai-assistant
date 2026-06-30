@@ -36,7 +36,7 @@ const NAV = [
   { to: '/cheltuieli', label: 'Cheltuieli', icon: 'cheltuieli' },
   { to: '/extrase', label: 'Extrase bancare', icon: 'extrase' },
   { to: '/legislatie', label: 'Legislație', icon: 'legislatie' },
-  { to: '/asistent', label: 'Asistent', icon: 'asistent' },
+  { to: '/asistent', label: 'Dario', icon: 'asistent' },
 ]
 
 export default function Layout() {
@@ -67,10 +67,11 @@ export default function Layout() {
         <aside className="w-64 flex-shrink-0 bg-ink flex flex-col">
           <div className="px-5 py-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-1.5 h-7 bg-accent rounded-full flex-shrink-0" />
-              <span className="font-display font-bold text-white text-lg leading-none tracking-tight">
-                Asistent Fiscal
-              </span>
+              <div className="w-1.5 h-9 bg-accent rounded-full flex-shrink-0" />
+              <div className="leading-none">
+                <span className="block font-display font-bold text-white text-xl tracking-tight">Dario</span>
+                <span className="block text-[11px] text-onDarkMuted mt-1">asistentul tău fiscal</span>
+              </div>
             </div>
           </div>
 

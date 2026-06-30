@@ -32,8 +32,11 @@ export default function Login() {
     <div className="min-h-screen bg-ink flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2.5 mb-8">
-          <div className="w-1.5 h-7 bg-accent rounded-full" />
-          <span className="font-display font-bold text-white text-2xl tracking-tight">Asistent Fiscal</span>
+          <div className="w-1.5 h-10 bg-accent rounded-full" />
+          <div className="leading-none">
+            <span className="block font-display font-bold text-white text-2xl tracking-tight">Dario</span>
+            <span className="block text-xs text-onDarkMuted mt-1">asistentul tău fiscal</span>
+          </div>
         </div>
         <div className="bg-white rounded-2xl p-7 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
           <div className="h-0.5 w-10 bg-accent mb-4" />

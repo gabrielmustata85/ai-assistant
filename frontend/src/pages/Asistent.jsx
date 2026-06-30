@@ -70,8 +70,8 @@ export default function Asistent() {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-6 py-4 border-b border-hairline bg-white">
         <div>
-          <h1 className="font-display font-bold text-xl text-ink">Asistent Fiscal</h1>
-          <p className="text-xs text-muted">{selectedCompany.name}</p>
+          <h1 className="font-display font-bold text-xl text-ink">Dario</h1>
+          <p className="text-xs text-muted">asistentul tău fiscal · {selectedCompany.name}</p>
         </div>
         <button onClick={handleReset}
           className="text-xs text-muted hover:text-danger border border-hairline rounded-lg px-3 py-1.5 transition-colors">
@@ -85,7 +85,7 @@ export default function Asistent() {
             <div className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3" style={{backgroundColor:'rgba(31,111,92,0.1)'}}>
               <span className="text-accent text-2xl">💬</span>
             </div>
-            <p className="text-sm text-muted mb-4">Întreabă-mă orice despre taxele și obligațiile firmei tale.</p>
+            <p className="text-sm text-muted mb-4">Sunt Dario. Întreabă-mă orice despre taxele și obligațiile firmei tale.</p>
             <div className="flex flex-wrap gap-2 justify-center">
               {['Ce taxe am de plătit luna aceasta?', 'Cum reduc impozitul pe profit?', 'Sunt înregistrat corect pentru TVA?'].map(q => (
                 <button key={q} onClick={() => setQuestion(q)}
