@@ -49,5 +49,13 @@ services:
       PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT:-}
       PINECONE_INDEX_NAME: ${PINECONE_INDEX_NAME:-fiscal-assistant-index}
 
+  frontend:
+    build: ./frontend
+    container_name: fiscal-frontend
+    ports:
+      - "8081:80"
+    depends_on:
+      - app
+
 volumes:
   pgdata:
