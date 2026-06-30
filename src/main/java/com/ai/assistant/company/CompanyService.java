@@ -21,6 +21,11 @@ public class CompanyService {
         return repository.save(company);
     }
 
+    /** Firmele deținute de userul autentificat. */
+    public java.util.List<Company> listMine() {
+        return repository.findByOwnerUserId(CurrentUser.id());
+    }
+
     /** PUNCT UNIC DE CONTROL: orice acces la o firmă trece prin verificarea de ownership. */
     public Company get(Long id) {
         Company company = repository.findById(id).orElseThrow(() -> new CompanyNotFoundException(id));

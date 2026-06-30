@@ -18,6 +18,11 @@ public class CompanyController {
         return ResponseEntity.status(201).body(service.create(company));
     }
 
+    @GetMapping
+    public ResponseEntity<java.util.List<Company>> listMine() {
+        return ResponseEntity.ok(service.listMine());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Company> get(@PathVariable Long id) {
         return ResponseEntity.ok(service.get(id));
