@@ -51,6 +51,18 @@ public class PayrollService {
         return expenseRepository.findByCompanyId(companyId);
     }
 
+    public void deleteEmployee(Long id) {
+        Employee employee = employeeRepository.findById(id).orElseThrow();
+        companyService.get(employee.getCompanyId());   // verifică ownership-ul firmei
+        employeeRepository.deleteById(id);
+    }
+
+    public void deleteExpense(Long id) {
+        Expense expense = expenseRepository.findById(id).orElseThrow();
+        companyService.get(expense.getCompanyId());    // verifică ownership-ul firmei
+        expenseRepository.deleteById(id);
+    }
+
     /** Extrage datele unei cheltuieli dintr-un PDF (nu o salvează — userul confirmă apoi). */
     public ParsedExpense parseExpensePdf(Long companyId, MultipartFile file) throws IOException {
         companyService.get(companyId);

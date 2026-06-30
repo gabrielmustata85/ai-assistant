@@ -40,6 +40,18 @@ public class PayrollController {
         return ResponseEntity.ok(service.expenses(companyId));
     }
 
+    @DeleteMapping("/employees/{id}")
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+        service.deleteEmployee(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/expenses/{id}")
+    public ResponseEntity<Void> deleteExpense(@PathVariable Long id) {
+        service.deleteExpense(id);
+        return ResponseEntity.noContent().build();
+    }
+
     /** Încarcă un PDF (bon/factură); Claude extrage datele cheltuielii (nu salvează — userul confirmă). */
     @PostMapping("/companies/{companyId}/expenses/parse")
     public ResponseEntity<?> parseExpense(@PathVariable Long companyId, @RequestParam("file") MultipartFile file) {
