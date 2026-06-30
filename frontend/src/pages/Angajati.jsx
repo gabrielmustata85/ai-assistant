@@ -41,6 +41,17 @@ export default function Angajati() {
     }
   }
 
+  async function handleDelete(id) {
+    if (!confirm('Ștergi acest angajat?')) return
+    try {
+      await apiFetch(`/employees/${id}`, { method: 'DELETE' }, token)
+      setEmployees(prev => prev.filter(e => e.id !== id))
+      addToast('Angajat șters.', 'success')
+    } catch (err) {
+      addToast(err.message)
+    }
+  }
+
   if (!selectedCompany) return <div className="p-6 text-center text-muted text-sm">Selectează o firmă.</div>
 
   return (
@@ -116,6 +127,7 @@ export default function Angajati() {
                 <th className="text-left px-4 py-3 text-xs text-muted font-medium">Status</th>
                 <th className="text-right px-4 py-3 text-xs text-muted font-medium">Data angajare</th>
                 <th className="text-right px-4 py-3 text-xs text-muted font-medium">Salariu brut</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
@@ -134,6 +146,12 @@ export default function Angajati() {
                   <td className="px-4 py-2.5 text-right font-mono tabular-nums font-medium">
                     {(emp.grossSalary || 0).toLocaleString('ro-RO', { minimumFractionDigits: 2 })}
                     <span className="text-muted text-xs ml-1">LEI</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <button onClick={() => handleDelete(emp.id)}
+                      className="text-xs text-muted hover:text-danger transition-colors">
+                      Șterge
+                    </button>
                   </td>
                 </tr>
               ))}

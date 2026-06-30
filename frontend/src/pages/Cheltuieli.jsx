@@ -60,6 +60,17 @@ export default function Cheltuieli() {
     }
   }
 
+  async function handleDelete(id) {
+    if (!confirm('Ștergi această cheltuială?')) return
+    try {
+      await apiFetch(`/expenses/${id}`, { method: 'DELETE' }, token)
+      setExpenses(prev => prev.filter(e => e.id !== id))
+      addToast('Cheltuială ștearsă.', 'success')
+    } catch (err) {
+      addToast(err.message)
+    }
+  }
+
   async function handlePdfUpload(e) {
     const files = Array.from(e.target.files || [])
     if (pdfInputRef.current) pdfInputRef.current.value = ''
@@ -240,6 +251,7 @@ export default function Cheltuieli() {
                 <th className="text-left px-4 py-3 text-xs text-muted font-medium">Deductibilă</th>
                 <th className="text-right px-4 py-3 text-xs text-muted font-medium">Data</th>
                 <th className="text-right px-4 py-3 text-xs text-muted font-medium">Sumă (LEI)</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
@@ -256,6 +268,12 @@ export default function Cheltuieli() {
                   <td className="px-4 py-2.5 text-right font-mono tabular-nums font-medium">
                     {(exp.amount || 0).toLocaleString('ro-RO', { minimumFractionDigits: 2 })}
                     <span className="text-muted text-xs ml-1">LEI</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <button onClick={() => handleDelete(exp.id)}
+                      className="text-xs text-muted hover:text-danger transition-colors">
+                      Șterge
+                    </button>
                   </td>
                 </tr>
               ))}
