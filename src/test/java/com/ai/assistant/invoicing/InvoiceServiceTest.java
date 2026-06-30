@@ -19,6 +19,7 @@ class InvoiceServiceTest {
 
     @Mock InvoiceRepository repository;
     @Mock CompanyService companyService;
+    @Mock InvoicePdfParser pdfParser;
     @InjectMocks InvoiceService service;
 
     @Test

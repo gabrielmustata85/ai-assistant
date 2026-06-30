@@ -1,29 +1,26 @@
 package com.ai.assistant.invoicing;
 
 import com.ai.assistant.ai.ClaudeClient;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
+import com.ai.assistant.common.PdfTextExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /** Extrage textul dintr-un PDF de factură și pune Claude să scoată datele structurate. */
 @Service
 public class InvoicePdfParser {
 
     private final ClaudeClient claudeClient;
+    private final PdfTextExtractor pdfTextExtractor;
 
-    public InvoicePdfParser(ClaudeClient claudeClient) {
+    public InvoicePdfParser(ClaudeClient claudeClient, PdfTextExtractor pdfTextExtractor) {
         this.claudeClient = claudeClient;
+        this.pdfTextExtractor = pdfTextExtractor;
     }
 
     public ParsedInvoice parse(MultipartFile file) throws IOException {
-        String text = extractText(file);
-        if (text == null || text.isBlank()) {
-            throw new IOException("Nu s-a putut extrage text din PDF (poate e scanat/imagine).");
-        }
+        String text = pdfTextExtractor.extract(file);
         String prompt = """
                 Ești un asistent care extrage datele unei facturi românești dintr-un PDF.
                 Extrage câmpurile cerute din textul de mai jos. Sumele sunt numere (fără simbol valutar),
@@ -33,14 +30,5 @@ public class InvoicePdfParser {
                 === TEXT FACTURĂ ===
                 """ + text;
         return claudeClient.extractStructured(prompt, ParsedInvoice.class);
-    }
-
-    private String extractText(MultipartFile file) throws IOException {
-        try (InputStream is = file.getInputStream();
-             PDDocument document = PDDocument.load(is)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setSortByPosition(true);
-            return stripper.getText(document);
-        }
     }
 }

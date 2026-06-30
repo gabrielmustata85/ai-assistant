@@ -1,5 +1,6 @@
 package com.ai.assistant.invoicing;
 
+import com.ai.assistant.common.BatchParseResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,13 @@ public class InvoiceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getClass().getSimpleName(), "message", String.valueOf(e.getMessage())));
         }
+    }
+
+    /** Încarcă mai multe PDF-uri; întoarce datele extrase per fișier (cu erori individuale). */
+    @PostMapping("/companies/{companyId}/invoices/parse-batch")
+    public ResponseEntity<List<BatchParseResult<ParsedInvoice>>> parseBatch(@PathVariable Long companyId,
+                                                             @RequestParam("files") MultipartFile[] files) {
+        return ResponseEntity.ok(service.parsePdfBatch(companyId, files));
     }
 
     @GetMapping("/companies/{companyId}/invoices")

@@ -1,8 +1,12 @@
 package com.ai.assistant.payroll;
 
+import com.ai.assistant.common.BatchParseResult;
 import com.ai.assistant.company.CompanyService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -11,13 +15,16 @@ public class PayrollService {
     private final EmployeeRepository employeeRepository;
     private final ExpenseRepository expenseRepository;
     private final CompanyService companyService;
+    private final ExpensePdfParser expensePdfParser;
 
     public PayrollService(EmployeeRepository employeeRepository,
                           ExpenseRepository expenseRepository,
-                          CompanyService companyService) {
+                          CompanyService companyService,
+                          ExpensePdfParser expensePdfParser) {
         this.employeeRepository = employeeRepository;
         this.expenseRepository = expenseRepository;
         this.companyService = companyService;
+        this.expensePdfParser = expensePdfParser;
     }
 
     public Employee addEmployee(Long companyId, Employee employee) {
@@ -42,5 +49,26 @@ public class PayrollService {
     public List<Expense> expenses(Long companyId) {
         companyService.get(companyId);   // verifică ownership
         return expenseRepository.findByCompanyId(companyId);
+    }
+
+    /** Extrage datele unei cheltuieli dintr-un PDF (nu o salvează — userul confirmă apoi). */
+    public ParsedExpense parseExpensePdf(Long companyId, MultipartFile file) throws IOException {
+        companyService.get(companyId);
+        return expensePdfParser.parse(file);
+    }
+
+    /** Extrage cheltuieli din mai multe PDF-uri; per fișier întoarce ori datele, ori eroarea. */
+    public List<BatchParseResult<ParsedExpense>> parseExpensePdfBatch(Long companyId, MultipartFile[] files) {
+        companyService.get(companyId);
+        List<BatchParseResult<ParsedExpense>> results = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String name = file.getOriginalFilename();
+            try {
+                results.add(BatchParseResult.ok(name, expensePdfParser.parse(file)));
+            } catch (Exception e) {
+                results.add(BatchParseResult.failed(name, e.getMessage()));
+            }
+        }
+        return results;
     }
 }

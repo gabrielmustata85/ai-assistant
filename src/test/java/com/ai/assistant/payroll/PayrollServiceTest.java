@@ -19,6 +19,7 @@ class PayrollServiceTest {
     @Mock EmployeeRepository employeeRepository;
     @Mock ExpenseRepository expenseRepository;
     @Mock CompanyService companyService;
+    @Mock ExpensePdfParser expensePdfParser;
     @InjectMocks PayrollService service;
 
     @Test
