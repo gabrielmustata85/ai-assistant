@@ -1,0 +1,50 @@
+# Pornește baza de date Postgres + aplicația cu o singură comandă:
+#   docker compose up --build
+# (prima rulare durează câteva minute: descarcă dependențele și construiește imaginea)
+#
+# - Postgres pornește primul, cu healthcheck; aplicația pornește DOAR după ce DB e gata.
+# - Flyway rulează migrările V1/V2/V3, apoi Hibernate validează schema.
+# - auth + CRUD funcționează imediat. /advisor/ask și /knowledge/upload au nevoie în plus
+#   de cheile AI (treci-le din mediu) + un index Pinecone cu dimension=1024.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fiscal-postgres
+    environment:
+      POSTGRES_DB: sql_assistant_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"          # host 5433 (5432 e deja ocupat la tine); în rețea rămâne 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sql_assistant_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: fiscal-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      # DB: aplicația vorbește cu serviciul "postgres" în rețeaua compose (port intern 5432)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sql_assistant_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      # Cheie de semnare JWT — DEV ONLY, schimb-o pentru producție (min. 32 caractere)
+      JWT_SECRET: dev-secret-change-me-min-32-characters-0123456789
+      # Cheile AI: trec din mediul tău dacă există; altfel goale (app pornește, dar
+      # /advisor și /knowledge nu vor funcționa fără ele + un index Pinecone dim=1024)
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
+      PINECONE_API_KEY: ${PINECONE_API_KEY:-}
+
+volumes:
+  pgdata:

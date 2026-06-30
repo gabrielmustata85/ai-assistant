@@ -1,0 +1,7 @@
+target
+.git
+.idea
+.superpowers
+docs
+*.iml
+*.md
