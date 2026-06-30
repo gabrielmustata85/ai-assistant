@@ -35,7 +35,7 @@ services:
       - "8080:8080"
     environment:
       # DB: aplicația vorbește cu serviciul "postgres" în rețeaua compose (port intern 5432)
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sql_assistant_db
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/sql_assistant_db?stringtype=unspecified"
       DB_USER: postgres
       DB_PASSWORD: postgres
       # Cheie de semnare JWT (din .env; are un default dev dacă lipsește) — min. 32 caractere
