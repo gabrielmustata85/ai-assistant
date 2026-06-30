@@ -38,13 +38,15 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sql_assistant_db
       DB_USER: postgres
       DB_PASSWORD: postgres
-      # Cheie de semnare JWT — DEV ONLY, schimb-o pentru producție (min. 32 caractere)
-      JWT_SECRET: dev-secret-change-me-min-32-characters-0123456789
-      # Cheile AI: trec din mediul tău dacă există; altfel goale (app pornește, dar
-      # /advisor și /knowledge nu vor funcționa fără ele + un index Pinecone dim=1024)
+      # Cheie de semnare JWT (din .env; are un default dev dacă lipsește) — min. 32 caractere
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-min-32-characters-0123456789}
+      # Cheile AI + config Pinecone — din .env. Dacă lipsesc, app pornește, dar
+      # /advisor și /knowledge nu vor funcționa. Indexul Pinecone trebuie să aibă dimension=1024.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       PINECONE_API_KEY: ${PINECONE_API_KEY:-}
+      PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT:-}
+      PINECONE_INDEX_NAME: ${PINECONE_INDEX_NAME:-fiscal-assistant-index}
 
 volumes:
   pgdata:
