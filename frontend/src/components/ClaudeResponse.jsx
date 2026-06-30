@@ -1,46 +1,5 @@
 import React from 'react'
-
-// Extrage o dată (YYYY-MM-DD sau DD.MM.YYYY / DD/MM/YYYY) dintr-un text de scadență.
-export function parseDeadline(scadenta) {
-  if (!scadenta) return null
-  let m = String(scadenta).match(/(\d{4})-(\d{2})-(\d{2})/)
-  if (m) return new Date(+m[1], +m[2] - 1, +m[3])
-  m = String(scadenta).match(/(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/)
-  if (m) return new Date(+m[3], +m[2] - 1, +m[1])
-  return null
-}
-
-// Câte zile până la scadență, raportat la azi (00:00).
-export function daysUntil(date) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  date.setHours(0, 0, 0, 0)
-  return Math.round((date - today) / 86400000)
-}
-
-export function DeadlineBadge({ scadenta }) {
-  const date = parseDeadline(scadenta)
-  if (!date) return null
-  const d = daysUntil(date)
-  if (d > 14) return null
-
-  let label, danger
-  if (d < 0) { label = `depășit cu ${Math.abs(d)} zile`; danger = true }
-  else if (d === 0) { label = 'scade azi'; danger = true }
-  else if (d === 1) { label = 'scade mâine'; danger = true }
-  else if (d <= 7) { label = `scade în ${d} zile`; danger = true }
-  else { label = `în ${d} zile`; danger = false }
-
-  const cls = danger ? 'text-white' : 'text-amber'
-  const style = danger
-    ? { backgroundColor: '#C2410C' }
-    : { backgroundColor: 'rgba(184,101,27,0.12)' }
-  return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cls}`} style={style}>
-      {label}
-    </span>
-  )
-}
+import UrgencyBadge from './UrgencyBadge.jsx'
 
 export default function ClaudeResponse({ data, onReset }) {
   if (!data) return null
@@ -91,7 +50,7 @@ export default function ClaudeResponse({ data, onReset }) {
               <li key={i} className="px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-paper transition-colors">
                 <span className="text-sm text-ink">{t.obligatie}</span>
                 <span className="flex items-center gap-2 shrink-0">
-                  <DeadlineBadge scadenta={t.scadenta} />
+                  <UrgencyBadge date={t.scadenta} />
                   <span className="font-mono text-xs text-amber tabular-nums">{t.scadenta}</span>
                 </span>
               </li>

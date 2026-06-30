@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
 import BatchReviewModal from '../components/BatchReviewModal.jsx'
+import UrgencyBadge from '../components/UrgencyBadge.jsx'
 
 const EMPTY_FORM = {
   direction: 'ISSUED', invoiceNumber: '', partnerName: '', partnerCui: '',
@@ -292,7 +293,12 @@ export default function Facturi() {
                   </td>
                   <td className="px-4 py-2.5 text-ink">{inv.partnerName}</td>
                   <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted">{inv.issueDate}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-amber">{inv.dueDate}</td>
+                  <td className="px-4 py-2.5 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {inv.direction === 'RECEIVED' && <UrgencyBadge date={inv.dueDate} />}
+                      <span className="font-mono text-xs tabular-nums text-amber">{inv.dueDate}</span>
+                    </div>
+                  </td>
                   <td className="px-4 py-2.5 text-right font-mono tabular-nums font-medium">
                     {(inv.grossAmount || 0).toLocaleString('ro-RO', { minimumFractionDigits: 2 })}
                     <span className="text-muted text-xs ml-1">LEI</span>

@@ -3,20 +3,12 @@ import { useCompany } from '../components/Layout.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
-import { parseDeadline, daysUntil, DeadlineBadge } from '../components/ClaudeResponse.jsx'
+import UrgencyBadge from '../components/UrgencyBadge.jsx'
+import { parseDeadline, daysUntil, urgencyColor, URGENCY_COLORS } from '../lib/urgency.js'
 
 const INK = '#10243A'
-const ACCENT = '#1F6F5C'
-const AMBER = '#B8651B'
-const DANGER = '#C2410C'
+const ACCENT = URGENCY_COLORS.calm
 const HORIZON = 45 // câte zile arată scadențarul
-
-function urgencyColor(days) {
-  if (days == null) return ACCENT
-  if (days <= 7) return DANGER
-  if (days <= 14) return AMBER
-  return ACCENT
-}
 
 function lei(n) {
   return (Number(n) || 0).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -228,7 +220,7 @@ function Scadentar({ markers, next }) {
           {' · '}
           <span className="font-mono text-xs">{next.scadenta}</span>
         </span>
-        <DeadlineBadge scadenta={next.scadenta} />
+        <UrgencyBadge date={next.scadenta} />
       </div>
 
       {/* Axa: azi → HORIZON zile */}
