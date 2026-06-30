@@ -34,7 +34,7 @@ export default function Login() {
         <div className="flex items-center gap-2.5 mb-8">
           <div className="w-1.5 h-10 bg-accent rounded-full" />
           <div className="leading-none">
-            <span className="block font-display font-bold text-white text-2xl tracking-tight">Dario</span>
+            <span className="block font-display font-bold text-white text-2xl tracking-tight">Marius</span>
             <span className="block text-xs text-onDarkMuted mt-1">asistentul tău fiscal</span>
           </div>
         </div>
