@@ -3,12 +3,27 @@ import { useCompany } from '../components/Layout.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
+import BatchReviewModal from '../components/BatchReviewModal.jsx'
 
 const EMPTY_FORM = {
   direction: 'ISSUED', invoiceNumber: '', partnerName: '', partnerCui: '',
   issueDate: '', dueDate: '', netAmount: '', vatAmount: '', grossAmount: '',
   category: '', deductible: false,
 }
+
+const INVOICE_COLUMNS = [
+  { key: 'direction', label: 'Direcție', type: 'select', options: [{ value: 'ISSUED', label: 'Emisă' }, { value: 'RECEIVED', label: 'Primită' }] },
+  { key: 'invoiceNumber', label: 'Nr. factură', type: 'text' },
+  { key: 'partnerName', label: 'Partener', type: 'text' },
+  { key: 'partnerCui', label: 'CUI', type: 'text', mono: true },
+  { key: 'issueDate', label: 'Data emiterii', type: 'date', mono: true },
+  { key: 'dueDate', label: 'Scadență', type: 'date', mono: true },
+  { key: 'netAmount', label: 'Net (LEI)', type: 'number', mono: true },
+  { key: 'vatAmount', label: 'TVA (LEI)', type: 'number', mono: true },
+  { key: 'grossAmount', label: 'Brut (LEI)', type: 'number', mono: true },
+  { key: 'category', label: 'Categorie', type: 'text' },
+  { key: 'deductible', label: 'Deductibilă', type: 'checkbox' },
+]
 
 export default function Facturi() {
   const { selectedCompany } = useCompany()
@@ -21,6 +36,12 @@ export default function Facturi() {
   const [parsing, setParsing] = useState(false)
   const [fromPdf, setFromPdf] = useState(false)
   const pdfInputRef = useRef(null)
+
+  // Batch state
+  const [batchItems, setBatchItems] = useState(null)
+  const [showBatchModal, setShowBatchModal] = useState(false)
+  const [batchSaving, setBatchSaving] = useState(false)
+  const [batchProgress, setBatchProgress] = useState(null)
 
   useEffect(() => {
     if (!selectedCompany) return
@@ -66,45 +87,105 @@ export default function Facturi() {
   }
 
   async function handlePdfUpload(e) {
-    const file = e.target.files?.[0]
-    if (!pdfInputRef.current) return
-    pdfInputRef.current.value = ''
-    if (!file) return
+    const files = Array.from(e.target.files || [])
+    if (pdfInputRef.current) pdfInputRef.current.value = ''
+    if (files.length === 0) return
 
-    setParsing(true)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const parsed = await apiFetch(
-        `/companies/${selectedCompany.id}/invoices/parse`,
-        { method: 'POST', body: fd },
-        token
-      )
-      setForm({
-        direction: parsed.direction || 'RECEIVED',
-        invoiceNumber: parsed.invoiceNumber || '',
-        partnerName: parsed.partnerName || '',
-        partnerCui: parsed.partnerCui || '',
-        issueDate: parsed.issueDate || '',
-        dueDate: parsed.dueDate || '',
-        netAmount: parsed.netAmount != null ? String(parsed.netAmount) : '',
-        vatAmount: parsed.vatAmount != null ? String(parsed.vatAmount) : '',
-        grossAmount: parsed.grossAmount != null ? String(parsed.grossAmount) : '',
-        category: parsed.category || '',
-        deductible: Boolean(parsed.deductible),
-      })
-      setFromPdf(true)
-      setShowForm(true)
-      addToast('Date extrase! Verifică și salvează factura.', 'success')
-    } catch (err) {
-      const msg = err.message || 'Eroare la extragerea datelor.'
-      addToast(
-        `${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`,
-        'error'
-      )
-    } finally {
-      setParsing(false)
+    if (files.length === 1) {
+      // Single file — existing behaviour: prefill form
+      setParsing(true)
+      try {
+        const fd = new FormData()
+        fd.append('file', files[0])
+        const parsed = await apiFetch(
+          `/companies/${selectedCompany.id}/invoices/parse`,
+          { method: 'POST', body: fd },
+          token
+        )
+        setForm({
+          direction: parsed.direction || 'RECEIVED',
+          invoiceNumber: parsed.invoiceNumber || '',
+          partnerName: parsed.partnerName || '',
+          partnerCui: parsed.partnerCui || '',
+          issueDate: parsed.issueDate || '',
+          dueDate: parsed.dueDate || '',
+          netAmount: parsed.netAmount != null ? String(parsed.netAmount) : '',
+          vatAmount: parsed.vatAmount != null ? String(parsed.vatAmount) : '',
+          grossAmount: parsed.grossAmount != null ? String(parsed.grossAmount) : '',
+          category: parsed.category || '',
+          deductible: Boolean(parsed.deductible),
+        })
+        setFromPdf(true)
+        setShowForm(true)
+        addToast('Date extrase! Verifică și salvează factura.', 'success')
+      } catch (err) {
+        const msg = err.message || 'Eroare la extragerea datelor.'
+        addToast(`${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`, 'error')
+      } finally {
+        setParsing(false)
+      }
+    } else {
+      // Multiple files — batch
+      setParsing(true)
+      try {
+        const fd = new FormData()
+        files.forEach(f => fd.append('files', f))
+        const results = await apiFetch(
+          `/companies/${selectedCompany.id}/invoices/parse-batch`,
+          { method: 'POST', body: fd },
+          token
+        )
+        setBatchItems(results)
+        setShowBatchModal(true)
+      } catch (err) {
+        const msg = err.message || 'Eroare la extragerea datelor.'
+        addToast(msg, 'error')
+      } finally {
+        setParsing(false)
+      }
     }
+  }
+
+  async function handleBatchSave(rows) {
+    setBatchSaving(true)
+    setBatchProgress({ done: 0, total: rows.length })
+    let saved = 0
+    for (const row of rows) {
+      try {
+        const body = {
+          direction: row.direction || 'RECEIVED',
+          invoiceNumber: row.invoiceNumber || '',
+          partnerName: row.partnerName || '',
+          partnerCui: row.partnerCui || '',
+          issueDate: row.issueDate || '',
+          dueDate: row.dueDate || '',
+          netAmount: parseFloat(row.netAmount) || 0,
+          vatAmount: parseFloat(row.vatAmount) || 0,
+          grossAmount: parseFloat(row.grossAmount) || 0,
+          category: row.category || '',
+          deductible: Boolean(row.deductible),
+        }
+        const inv = await apiFetch(`/companies/${selectedCompany.id}/invoices`, {
+          method: 'POST', body: JSON.stringify(body),
+        }, token)
+        setInvoices(prev => [...prev, inv])
+        saved++
+        setBatchProgress({ done: saved, total: rows.length })
+      } catch (err) {
+        addToast(`Eroare la salvarea facturii: ${err.message}`, 'error')
+      }
+    }
+    setBatchSaving(false)
+    setBatchProgress(null)
+    setShowBatchModal(false)
+    setBatchItems(null)
+    addToast(`${saved} factură/facturi salvate cu succes!`, 'success')
+  }
+
+  function closeBatchModal() {
+    if (batchSaving) return
+    setShowBatchModal(false)
+    setBatchItems(null)
   }
 
   if (!selectedCompany) return (
@@ -120,6 +201,7 @@ export default function Facturi() {
             ref={pdfInputRef}
             type="file"
             accept="application/pdf"
+            multiple
             className="hidden"
             onChange={handlePdfUpload}
           />
@@ -129,7 +211,7 @@ export default function Facturi() {
             onClick={() => pdfInputRef.current?.click()}
             className="border border-accent text-accent hover:bg-accent hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
           >
-            {parsing ? 'Se extrage datele…' : '↑ Încarcă PDF'}
+            {parsing ? `Se extrage datele…` : '↑ Încarcă PDF'}
           </button>
           <button
             onClick={() => setShowForm(v => !v)}
@@ -265,6 +347,17 @@ export default function Facturi() {
           </table>
         )}
       </div>
+
+      {showBatchModal && batchItems && (
+        <BatchReviewModal
+          items={batchItems}
+          columnDefs={INVOICE_COLUMNS}
+          onSave={handleBatchSave}
+          onClose={closeBatchModal}
+          saving={batchSaving}
+          saveProgress={batchProgress}
+        />
+      )}
     </div>
   )
 }

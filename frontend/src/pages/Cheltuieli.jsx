@@ -1,10 +1,19 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useCompany } from '../components/Layout.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
+import BatchReviewModal from '../components/BatchReviewModal.jsx'
 
 const EMPTY = { description: '', category: '', amount: '', expenseDate: '', deductible: false }
+
+const EXPENSE_COLUMNS = [
+  { key: 'description', label: 'Descriere', type: 'text' },
+  { key: 'category', label: 'Categorie', type: 'text' },
+  { key: 'amount', label: 'Sumă (LEI)', type: 'number', mono: true },
+  { key: 'expenseDate', label: 'Data', type: 'date', mono: true },
+  { key: 'deductible', label: 'Deductibilă', type: 'checkbox' },
+]
 
 export default function Cheltuieli() {
   const { selectedCompany } = useCompany()
@@ -14,6 +23,15 @@ export default function Cheltuieli() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
+  const [parsing, setParsing] = useState(false)
+  const [fromPdf, setFromPdf] = useState(false)
+  const pdfInputRef = useRef(null)
+
+  // Batch state
+  const [batchItems, setBatchItems] = useState(null)
+  const [showBatchModal, setShowBatchModal] = useState(false)
+  const [batchSaving, setBatchSaving] = useState(false)
+  const [batchProgress, setBatchProgress] = useState(null)
 
   useEffect(() => {
     if (!selectedCompany) return
@@ -32,6 +50,7 @@ export default function Cheltuieli() {
       }, token)
       setExpenses(prev => [...prev, exp])
       setForm(EMPTY)
+      setFromPdf(false)
       setShowForm(false)
       addToast('Cheltuială adăugată!', 'success')
     } catch (err) {
@@ -41,16 +60,126 @@ export default function Cheltuieli() {
     }
   }
 
+  async function handlePdfUpload(e) {
+    const files = Array.from(e.target.files || [])
+    if (pdfInputRef.current) pdfInputRef.current.value = ''
+    if (files.length === 0) return
+
+    if (files.length === 1) {
+      // Single file — prefill the form
+      setParsing(true)
+      try {
+        const fd = new FormData()
+        fd.append('file', files[0])
+        const parsed = await apiFetch(
+          `/companies/${selectedCompany.id}/expenses/parse`,
+          { method: 'POST', body: fd },
+          token
+        )
+        setForm({
+          description: parsed.description || '',
+          category: parsed.category || '',
+          amount: parsed.amount != null ? String(parsed.amount) : '',
+          expenseDate: parsed.expenseDate || '',
+          deductible: Boolean(parsed.deductible),
+        })
+        setFromPdf(true)
+        setShowForm(true)
+        addToast('Date extrase! Verifică și salvează cheltuiala.', 'success')
+      } catch (err) {
+        const msg = err.message || 'Eroare la extragerea datelor.'
+        addToast(`${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`, 'error')
+      } finally {
+        setParsing(false)
+      }
+    } else {
+      // Multiple files — batch
+      setParsing(true)
+      try {
+        const fd = new FormData()
+        files.forEach(f => fd.append('files', f))
+        const results = await apiFetch(
+          `/companies/${selectedCompany.id}/expenses/parse-batch`,
+          { method: 'POST', body: fd },
+          token
+        )
+        setBatchItems(results)
+        setShowBatchModal(true)
+      } catch (err) {
+        const msg = err.message || 'Eroare la extragerea datelor.'
+        addToast(msg, 'error')
+      } finally {
+        setParsing(false)
+      }
+    }
+  }
+
+  async function handleBatchSave(rows) {
+    setBatchSaving(true)
+    setBatchProgress({ done: 0, total: rows.length })
+    let saved = 0
+    for (const row of rows) {
+      try {
+        const body = {
+          description: row.description || '',
+          category: row.category || '',
+          amount: parseFloat(row.amount) || 0,
+          expenseDate: row.expenseDate || '',
+          deductible: Boolean(row.deductible),
+        }
+        const exp = await apiFetch(`/companies/${selectedCompany.id}/expenses`, {
+          method: 'POST', body: JSON.stringify(body),
+        }, token)
+        setExpenses(prev => [...prev, exp])
+        saved++
+        setBatchProgress({ done: saved, total: rows.length })
+      } catch (err) {
+        addToast(`Eroare la salvarea cheltuielii: ${err.message}`, 'error')
+      }
+    }
+    setBatchSaving(false)
+    setBatchProgress(null)
+    setShowBatchModal(false)
+    setBatchItems(null)
+    addToast(`${saved} cheltuială/cheltuieli salvate cu succes!`, 'success')
+  }
+
+  function closeBatchModal() {
+    if (batchSaving) return
+    setShowBatchModal(false)
+    setBatchItems(null)
+  }
+
   if (!selectedCompany) return <div className="p-6 text-center text-muted text-sm">Selectează o firmă.</div>
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-bold text-2xl text-ink">Cheltuieli</h1>
-        <button onClick={() => setShowForm(v => !v)}
-          className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-          {showForm ? 'Anulează' : '＋ Adaugă cheltuială'}
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept="application/pdf"
+            multiple
+            className="hidden"
+            onChange={handlePdfUpload}
+          />
+          <button
+            type="button"
+            disabled={parsing}
+            onClick={() => pdfInputRef.current?.click()}
+            className="border border-accent text-accent hover:bg-accent hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+          >
+            {parsing ? 'Se extrage datele…' : '↑ Încarcă PDF'}
+          </button>
+          <button
+            onClick={() => setShowForm(v => !v)}
+            className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            {showForm ? 'Anulează' : '＋ Adaugă cheltuială'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -86,13 +215,13 @@ export default function Cheltuieli() {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setShowForm(false)}
+            <button type="button" onClick={() => { setShowForm(false); setFromPdf(false) }}
               className="border border-hairline rounded-lg px-4 py-2 text-sm text-muted hover:bg-paper transition-colors">
               Anulează
             </button>
             <button type="submit" disabled={saving}
               className="bg-accent hover:bg-accentHover text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
-              {saving ? 'Se salvează...' : 'Salvează'}
+              {saving ? 'Se salvează...' : fromPdf ? 'Verifică și salvează' : 'Salvează'}
             </button>
           </div>
         </form>
@@ -134,6 +263,17 @@ export default function Cheltuieli() {
           </table>
         )}
       </div>
+
+      {showBatchModal && batchItems && (
+        <BatchReviewModal
+          items={batchItems}
+          columnDefs={EXPENSE_COLUMNS}
+          onSave={handleBatchSave}
+          onClose={closeBatchModal}
+          saving={batchSaving}
+          saveProgress={batchProgress}
+        />
+      )}
     </div>
   )
 }
