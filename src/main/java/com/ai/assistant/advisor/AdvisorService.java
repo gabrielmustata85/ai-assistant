@@ -104,8 +104,20 @@ public class AdvisorService {
     }
 
     public ClaudeResponse obligations(Long companyId) {
-        return ask("obligations-" + companyId, companyId,
-                "Ce taxe am de plătit și până când? Estimează sumele și termenele.");
+        String today = java.time.LocalDate.now().toString();
+        String question = ("""
+                Azi este %s. Pe baza datelor firmei (facturi, salarii, cheltuieli, extrase bancare), \
+                estimează TOATE taxele și contribuțiile pe care firma le are de plătit în perioada următoare.
+                - În `estimari` pune fiecare taxă cu suma estimată și perioada.
+                - În `termene` pune scadențele, ORDONATE de la cea mai apropiată la cea mai îndepărtată, \
+                începând cu cele din luna/lunile imediat următoare față de data de azi.
+                - În `recomandari` dă sugestii CONCRETE de optimizare, cu sume aproximative în lei, de exemplu: \
+                „dacă mai adaugi cheltuieli deductibile de ~X lei, impozitul scade cu ~Y lei” sau \
+                „dacă mai facturezi ~Z lei până la finalul trimestrului, ...”. Pune efectul în lei în `impactEstimat`.
+                - Dacă lipsesc date esențiale (nr. angajați, salarii etc.), cere-le scurt în `data_gaps`.
+                - În `raspuns` scrie pe scurt care e următoarea taxă de plătit și până când.\
+                """).formatted(today);
+        return ask("obligations-" + companyId, companyId, question);
     }
 
     public void reset(String sessionId) {

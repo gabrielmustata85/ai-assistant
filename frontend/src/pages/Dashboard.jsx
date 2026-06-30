@@ -29,9 +29,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (!selectedCompany) return
     const id = selectedCompany.id
+    setObligations(null)
     apiFetch(`/companies/${id}/invoices`, {}, token).then(d => setInvoiceData(d || [])).catch(() => {})
     apiFetch(`/companies/${id}/employees`, {}, token).then(d => setEmployeeData(d || [])).catch(() => {})
     apiFetch(`/companies/${id}/expenses`, {}, token).then(d => setExpenseData(d || [])).catch(() => {})
+    loadObligations()
   }, [selectedCompany?.id])
 
   async function loadObligations() {
@@ -91,19 +93,31 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="bg-white border border-hairline rounded-lg p-5 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display font-semibold text-ink">Obligații fiscale</h2>
+      <div className="mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="font-display font-semibold text-ink">Taxe de plătit & sugestii</h2>
           <button
             onClick={loadObligations}
             disabled={loadingObl}
-            className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+            className="border border-accent text-accent hover:bg-accent hover:text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
           >
-            {loadingObl ? 'Se calculează...' : 'Ce taxe am de plătit?'}
+            {loadingObl ? 'Se calculează…' : '↻ Recalculează'}
           </button>
         </div>
-        {obligations ? <ClaudeResponse data={obligations} /> : (
-          <p className="text-sm text-muted">Apasă butonul pentru a vedea obligațiile fiscale ale firmei.</p>
+        <p className="text-xs text-muted mb-3">
+          Estimări orientative pe baza datelor introduse — termenele cele mai apropiate apar primele.
+        </p>
+
+        {loadingObl && !obligations && (
+          <div className="bg-white border border-hairline rounded-lg p-5 text-sm text-muted">
+            Se analizează datele firmei și se estimează taxele…
+          </div>
+        )}
+        {obligations && <ClaudeResponse data={obligations} />}
+        {!loadingObl && !obligations && (
+          <div className="bg-white border border-hairline rounded-lg p-5 text-sm text-muted">
+            Nu s-au putut calcula obligațiile. Apasă „Recalculează”.
+          </div>
         )}
       </div>
     </div>
