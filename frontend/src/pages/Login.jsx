@@ -29,13 +29,13 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+    <div className="min-h-screen bg-ink flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-2 h-7 bg-accent rounded-sm" />
-          <span className="font-display font-bold text-ink text-2xl">Asistent Fiscal</span>
+        <div className="flex items-center gap-2.5 mb-8">
+          <div className="w-1.5 h-7 bg-accent rounded-full" />
+          <span className="font-display font-bold text-white text-2xl tracking-tight">Asistent Fiscal</span>
         </div>
-        <div className="bg-white border border-hairline rounded-lg p-6 shadow-sm">
+        <div className="bg-white rounded-2xl p-7 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
           <div className="h-0.5 w-10 bg-accent mb-4" />
           <h1 className="font-display text-xl font-semibold text-ink mb-1">Bun venit</h1>
           <p className="text-sm text-muted mb-6">Autentifică-te pentru a continua</p>

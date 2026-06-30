@@ -167,7 +167,7 @@ export default function ExtraseBancare() {
         </div>
       )}
 
-      <div className="bg-white border border-hairline rounded-lg overflow-hidden">
+      <div className="bg-white border border-hairline rounded-2xl overflow-hidden shadow-sm">
         <div className="h-0.5 bg-accent" />
         {transactions.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted">
@@ -176,18 +176,18 @@ export default function ExtraseBancare() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-paper border-b border-hairline">
-                <th className="text-left px-4 py-3 text-xs text-muted font-medium">Data</th>
-                <th className="text-left px-4 py-3 text-xs text-muted font-medium">Sens</th>
-                <th className="text-left px-4 py-3 text-xs text-muted font-medium">Descriere</th>
-                <th className="text-left px-4 py-3 text-xs text-muted font-medium">Contraparte</th>
-                <th className="text-right px-4 py-3 text-xs text-muted font-medium">Sumă (LEI)</th>
+              <tr className="bg-ink">
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Data</th>
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Sens</th>
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Descriere</th>
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Contraparte</th>
+                <th className="text-right px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Sumă (LEI)</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
               {transactions.map(txn => (
-                <tr key={txn.id} className="border-t border-hairline hover:bg-paper transition-colors">
+                <tr key={txn.id} className="border-t border-hairline even:bg-[#F4F6F8] hover:bg-[#EAF3F0] transition-colors">
                   <td className="px-4 py-2.5 font-mono text-xs tabular-nums text-muted">{txn.txnDate}</td>
                   <td className="px-4 py-2.5">
                     <span

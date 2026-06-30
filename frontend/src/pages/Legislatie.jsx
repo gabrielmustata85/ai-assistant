@@ -61,7 +61,7 @@ export default function Legislatie() {
         </form>
       </div>
 
-      <div className="bg-white border border-hairline rounded-lg overflow-hidden">
+      <div className="bg-white border border-hairline rounded-2xl overflow-hidden shadow-sm">
         <div className="h-0.5 bg-accent" />
         <div className="px-4 pt-4 pb-2 border-b border-hairline">
           <h2 className="font-display font-semibold text-ink text-sm">Documente indexate ({docs.length})</h2>

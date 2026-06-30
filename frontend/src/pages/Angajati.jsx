@@ -211,25 +211,25 @@ export default function Angajati() {
         </form>
       )}
 
-      <div className="bg-white border border-hairline rounded-lg overflow-hidden">
+      <div className="bg-white border border-hairline rounded-2xl overflow-hidden shadow-sm">
         <div className="h-0.5 bg-accent" />
         {employees.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted">Niciun angajat înregistrat.</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-paper border-b border-hairline">
-                <th className="text-left px-4 py-3 text-xs text-muted font-medium">Nume</th>
-                <th className="text-left px-4 py-3 text-xs text-muted font-medium">Funcție</th>
-                <th className="text-left px-4 py-3 text-xs text-muted font-medium">Status</th>
-                <th className="text-right px-4 py-3 text-xs text-muted font-medium">Data angajare</th>
-                <th className="text-right px-4 py-3 text-xs text-muted font-medium">Salariu brut</th>
+              <tr className="bg-ink">
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Nume</th>
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Funcție</th>
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Status</th>
+                <th className="text-right px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Data angajare</th>
+                <th className="text-right px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Salariu brut</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
               {employees.map(emp => (
-                <tr key={emp.id} className="border-t border-hairline hover:bg-paper transition-colors">
+                <tr key={emp.id} className="border-t border-hairline even:bg-[#F4F6F8] hover:bg-[#EAF3F0] transition-colors">
                   <td className="px-4 py-2.5 font-medium text-ink">{emp.fullName}</td>
                   <td className="px-4 py-2.5 text-muted">{emp.position}</td>
                   <td className="px-4 py-2.5">
