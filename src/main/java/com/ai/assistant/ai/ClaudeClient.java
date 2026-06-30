@@ -50,13 +50,18 @@ public class ClaudeClient {
 
     /** Răspuns structurat JSON conform ClaudeResponse. */
     public ClaudeResponse ask(String prompt) {
+        return extractStructured(prompt, ClaudeResponse.class);
+    }
+
+    /** Extrage din prompt un obiect structurat conform clasei date (output structurat Claude). */
+    public <T> T extractStructured(String prompt, Class<T> schemaClass) {
         // outputConfig(Class<T>, JsonSchemaLocalValidation) transitions the builder to
         // StructuredMessageCreateParams.Builder<T>; JsonSchemaLocalValidation.NO skips local validation.
-        StructuredMessageCreateParams<ClaudeResponse> params = MessageCreateParams.builder()
+        StructuredMessageCreateParams<T> params = MessageCreateParams.builder()
                 .model(MODEL)
                 .maxTokens(MAX_TOKENS)
                 .thinking(ThinkingConfigAdaptive.builder().build())
-                .outputConfig(ClaudeResponse.class, JsonSchemaLocalValidation.NO)
+                .outputConfig(schemaClass, JsonSchemaLocalValidation.NO)
                 .addUserMessage(prompt)
                 .build();
 
