@@ -76,52 +76,24 @@ export default function Cheltuieli() {
     if (pdfInputRef.current) pdfInputRef.current.value = ''
     if (files.length === 0) return
 
-    if (files.length === 1) {
-      // Single file — prefill the form
-      setParsing(true)
-      try {
-        const fd = new FormData()
-        fd.append('file', files[0])
-        const parsed = await apiFetch(
-          `/companies/${selectedCompany.id}/expenses/parse`,
-          { method: 'POST', body: fd },
-          token
-        )
-        setForm({
-          description: parsed.description || '',
-          category: parsed.category || '',
-          amount: parsed.amount != null ? String(parsed.amount) : '',
-          expenseDate: parsed.expenseDate || '',
-          deductible: Boolean(parsed.deductible),
-        })
-        setFromPdf(true)
-        setShowForm(true)
-        addToast('Date extrase! Verifică și salvează cheltuiala.', 'success')
-      } catch (err) {
-        const msg = err.message || 'Eroare la extragerea datelor.'
-        addToast(`${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`, 'error')
-      } finally {
-        setParsing(false)
-      }
-    } else {
-      // Multiple files — batch
-      setParsing(true)
-      try {
-        const fd = new FormData()
-        files.forEach(f => fd.append('files', f))
-        const results = await apiFetch(
-          `/companies/${selectedCompany.id}/expenses/parse-batch`,
-          { method: 'POST', body: fd },
-          token
-        )
-        setBatchItems(results)
-        setShowBatchModal(true)
-      } catch (err) {
-        const msg = err.message || 'Eroare la extragerea datelor.'
-        addToast(msg, 'error')
-      } finally {
-        setParsing(false)
-      }
+    // Orice upload (1 sau mai multe fișiere; un PDF poate conține mai multe cheltuieli)
+    // trece prin tabelul de verificare.
+    setParsing(true)
+    try {
+      const fd = new FormData()
+      files.forEach(f => fd.append('files', f))
+      const results = await apiFetch(
+        `/companies/${selectedCompany.id}/expenses/parse-batch`,
+        { method: 'POST', body: fd },
+        token
+      )
+      setBatchItems(results)
+      setShowBatchModal(true)
+    } catch (err) {
+      const msg = err.message || 'Eroare la extragerea datelor.'
+      addToast(`${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`, 'error')
+    } finally {
+      setParsing(false)
     }
   }
 
