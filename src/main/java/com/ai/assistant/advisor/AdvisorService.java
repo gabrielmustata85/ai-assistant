@@ -71,6 +71,9 @@ public class AdvisorService {
 
     private String buildAuditText(ClaudeResponse r) {
         StringBuilder sb = new StringBuilder();
+        if (r.raspuns() != null && !r.raspuns().isBlank()) {
+            sb.append("RĂSPUNS: ").append(r.raspuns()).append("\n\n");
+        }
         if (r.disclaimer() != null && !r.disclaimer().isBlank()) {
             sb.append("DISCLAIMER: ").append(r.disclaimer()).append("\n\n");
         }

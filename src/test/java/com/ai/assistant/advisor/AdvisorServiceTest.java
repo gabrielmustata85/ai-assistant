@@ -36,7 +36,7 @@ class AdvisorServiceTest {
         when(pineconeClient.fetchLegislation("legis-1")).thenReturn("Cota micro 1%");
         when(promptBuilder.build(anyString(), anyString(), anyString(), anyList()))
                 .thenReturn("PROMPT");
-        ClaudeResponse expected = new ClaudeResponse(List.of(), List.of(), List.of(), List.of(), "orientativ");
+        ClaudeResponse expected = new ClaudeResponse("Răspuns scurt", List.of(), List.of(), List.of(), List.of(), "orientativ");
         when(claudeClient.ask("PROMPT")).thenReturn(expected);
 
         ClaudeResponse result = service.ask("s1", 1L, "Ce taxe am?");
