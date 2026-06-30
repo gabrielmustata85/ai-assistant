@@ -14,6 +14,7 @@ const NAV = [
   { to: '/facturi', label: 'Facturi', icon: '🧾' },
   { to: '/angajati', label: 'Angajați', icon: '👤' },
   { to: '/cheltuieli', label: 'Cheltuieli', icon: '💳' },
+  { to: '/extrase', label: 'Extrase bancare', icon: '🏦' },
   { to: '/legislatie', label: 'Legislație', icon: '📋' },
   { to: '/asistent', label: 'Asistent', icon: '💬' },
 ]

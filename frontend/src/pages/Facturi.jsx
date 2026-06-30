@@ -34,7 +34,6 @@ export default function Facturi() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [parsing, setParsing] = useState(false)
-  const [fromPdf, setFromPdf] = useState(false)
   const pdfInputRef = useRef(null)
 
   // Batch state
@@ -65,7 +64,6 @@ export default function Facturi() {
       }, token)
       setInvoices(prev => [...prev, inv])
       setForm(EMPTY_FORM)
-      setFromPdf(false)
       setShowForm(false)
       addToast('Factură adăugată!', 'success')
     } catch (err) {
@@ -91,58 +89,22 @@ export default function Facturi() {
     if (pdfInputRef.current) pdfInputRef.current.value = ''
     if (files.length === 0) return
 
-    if (files.length === 1) {
-      // Single file — existing behaviour: prefill form
-      setParsing(true)
-      try {
-        const fd = new FormData()
-        fd.append('file', files[0])
-        const parsed = await apiFetch(
-          `/companies/${selectedCompany.id}/invoices/parse`,
-          { method: 'POST', body: fd },
-          token
-        )
-        setForm({
-          direction: parsed.direction || 'RECEIVED',
-          invoiceNumber: parsed.invoiceNumber || '',
-          partnerName: parsed.partnerName || '',
-          partnerCui: parsed.partnerCui || '',
-          issueDate: parsed.issueDate || '',
-          dueDate: parsed.dueDate || '',
-          netAmount: parsed.netAmount != null ? String(parsed.netAmount) : '',
-          vatAmount: parsed.vatAmount != null ? String(parsed.vatAmount) : '',
-          grossAmount: parsed.grossAmount != null ? String(parsed.grossAmount) : '',
-          category: parsed.category || '',
-          deductible: Boolean(parsed.deductible),
-        })
-        setFromPdf(true)
-        setShowForm(true)
-        addToast('Date extrase! Verifică și salvează factura.', 'success')
-      } catch (err) {
-        const msg = err.message || 'Eroare la extragerea datelor.'
-        addToast(`${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`, 'error')
-      } finally {
-        setParsing(false)
-      }
-    } else {
-      // Multiple files — batch
-      setParsing(true)
-      try {
-        const fd = new FormData()
-        files.forEach(f => fd.append('files', f))
-        const results = await apiFetch(
-          `/companies/${selectedCompany.id}/invoices/parse-batch`,
-          { method: 'POST', body: fd },
-          token
-        )
-        setBatchItems(results)
-        setShowBatchModal(true)
-      } catch (err) {
-        const msg = err.message || 'Eroare la extragerea datelor.'
-        addToast(msg, 'error')
-      } finally {
-        setParsing(false)
-      }
+    setParsing(true)
+    try {
+      const fd = new FormData()
+      files.forEach(f => fd.append('files', f))
+      const results = await apiFetch(
+        `/companies/${selectedCompany.id}/invoices/parse-batch`,
+        { method: 'POST', body: fd },
+        token
+      )
+      setBatchItems(results)
+      setShowBatchModal(true)
+    } catch (err) {
+      const msg = err.message || 'Eroare la extragerea datelor.'
+      addToast(`${msg} PDF-urile scanate (imagini) nu pot fi citite automat.`, 'error')
+    } finally {
+      setParsing(false)
     }
   }
 
@@ -288,13 +250,13 @@ export default function Facturi() {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => { setShowForm(false); setFromPdf(false) }}
+            <button type="button" onClick={() => setShowForm(false)}
               className="border border-hairline rounded-lg px-4 py-2 text-sm text-muted hover:bg-paper transition-colors">
               Anulează
             </button>
             <button type="submit" disabled={saving}
               className="bg-accent hover:bg-accentHover text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
-              {saving ? 'Se salvează...' : fromPdf ? 'Verifică și salvează' : 'Salvează'}
+              {saving ? 'Se salvează...' : 'Salvează'}
             </button>
           </div>
         </form>
