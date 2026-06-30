@@ -1,5 +1,7 @@
 package com.ai.assistant.config;
 
+import com.anthropic.errors.AnthropicServiceException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +12,9 @@ import java.util.Map;
 
 /**
  * Mapează excepțiile comune la coduri HTTP clare, ca să nu mai apară 500-uri
- * mascate ca 401 (din cauza re-dispatch-ului către /error).
+ * generice / mascate ca 401 (din cauza re-dispatch-ului către /error).
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -21,5 +24,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", "Conflict",
                 "message", "O valoare unică există deja (ex: CUI sau username). Folosește alta."));
+    }
+
+    /** Erori de la API-ul Claude (Anthropic) — le scoatem în răspuns, nu un 500 generic. */
+    @ExceptionHandler(AnthropicServiceException.class)
+    public ResponseEntity<Map<String, String>> handleAnthropic(AnthropicServiceException e) {
+        log.error("Claude API error: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", "ClaudeApiError",
+                "message", String.valueOf(e.getMessage())));
     }
 }
