@@ -1,7 +1,7 @@
 import React from 'react'
 
 // Extrage o dată (YYYY-MM-DD sau DD.MM.YYYY / DD/MM/YYYY) dintr-un text de scadență.
-function parseDeadline(scadenta) {
+export function parseDeadline(scadenta) {
   if (!scadenta) return null
   let m = String(scadenta).match(/(\d{4})-(\d{2})-(\d{2})/)
   if (m) return new Date(+m[1], +m[2] - 1, +m[3])
@@ -11,14 +11,14 @@ function parseDeadline(scadenta) {
 }
 
 // Câte zile până la scadență, raportat la azi (00:00).
-function daysUntil(date) {
+export function daysUntil(date) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   date.setHours(0, 0, 0, 0)
   return Math.round((date - today) / 86400000)
 }
 
-function DeadlineBadge({ scadenta }) {
+export function DeadlineBadge({ scadenta }) {
   const date = parseDeadline(scadenta)
   if (!date) return null
   const d = daysUntil(date)
