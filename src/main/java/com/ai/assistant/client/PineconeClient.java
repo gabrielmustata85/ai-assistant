@@ -30,9 +30,16 @@ public class PineconeClient {
     public PineconeClient(
             @Value("${pinecone.environment}") String environment,
             @Value("${pinecone.index.name}") String indexName,
-            @Value("${pinecone.api.key}") String apiKey) {
+            @Value("${pinecone.api.key}") String apiKey,
+            @Value("${pinecone.host:}") String host) {
         this.apiKey = apiKey;
-        this.baseUrl = String.format("https://%s-%s.pinecone.io", indexName, environment);
+        // Serverless Pinecone: folosește Host-ul indexului direct (din consolă).
+        // Fallback la formatul vechi pod-based dacă pinecone.host nu e setat.
+        if (host != null && !host.isBlank()) {
+            this.baseUrl = host.startsWith("http") ? host : "https://" + host;
+        } else {
+            this.baseUrl = String.format("https://%s-%s.pinecone.io", indexName, environment);
+        }
         this.client = createSecureClient();
     }
 

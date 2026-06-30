@@ -36,10 +36,11 @@ public class EnhancedPineconeClient extends PineconeClient {
             @Value("${pinecone.environment}") String environment,
             @Value("${pinecone.index.name}") String indexName,
             @Value("${pinecone.api.key}") String apiKey,
+            @Value("${pinecone.host:}") String host,
             EmbeddingClient embeddingClient,
             ConversationContext conversationContext,
             AIResponseHistoryService historyService) {
-        super(environment, indexName, apiKey);
+        super(environment, indexName, apiKey, host);
         this.embeddingClient = embeddingClient;
         this.conversationContext = conversationContext;
         this.historyService = historyService;
