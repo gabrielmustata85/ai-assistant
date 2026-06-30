@@ -35,10 +35,10 @@ public class BankController {
         }
     }
 
-    /** Salvează în lot tranzacțiile confirmate. */
+    /** Salvează în lot tranzacțiile confirmate (duplicatele din perioade suprapuse sunt ignorate). */
     @PostMapping("/companies/{companyId}/bank/transactions")
-    public ResponseEntity<List<BankTransaction>> saveAll(@PathVariable Long companyId,
-                                                         @RequestBody List<BankTransaction> transactions) {
+    public ResponseEntity<BankImportResult> saveAll(@PathVariable Long companyId,
+                                                    @RequestBody List<BankTransaction> transactions) {
         return ResponseEntity.ok(service.saveAll(companyId, transactions));
     }
 

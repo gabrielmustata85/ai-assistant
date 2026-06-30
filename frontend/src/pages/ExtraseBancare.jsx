@@ -73,15 +73,22 @@ export default function ExtraseBancare() {
         direction: r.direction || 'IN',
         amount: parseFloat(r.amount) || 0,
       }))
-      const saved = await apiFetch(
+      const result = await apiFetch(
         `/companies/${selectedCompany.id}/bank/transactions`,
         { method: 'POST', body: JSON.stringify(payload) },
         token
       )
       setShowBatchModal(false)
       setBatchItems(null)
-      addToast(`${rows.length} tranzacții salvate!`, 'success')
-      setTransactions(prev => [...prev, ...(saved || [])])
+      const skipped = result?.skippedDuplicates || 0
+      const saved = result?.saved ?? (result?.transactions?.length || 0)
+      addToast(
+        skipped > 0
+          ? `${saved} tranzacții salvate, ${skipped} duplicate ignorate.`
+          : `${saved} tranzacții salvate!`,
+        'success'
+      )
+      setTransactions(prev => [...prev, ...(result?.transactions || [])])
     } catch (err) {
       addToast(err.message || 'Eroare la salvare.', 'error')
     } finally {
