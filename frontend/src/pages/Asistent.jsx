@@ -130,7 +130,7 @@ export default function Asistent() {
             className="flex-1 border border-hairline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
           />
           <button type="submit" disabled={loading || !question.trim()}
-            className="bg-accent hover:bg-accentHover text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-60">
+            className="bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] font-medium px-5 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-60">
             Trimite
           </button>
         </form>

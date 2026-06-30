@@ -69,7 +69,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-accent hover:bg-accentHover text-white font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-60"
+              className="w-full bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-60"
             >
               {loading ? 'Se înregistrează...' : 'Înregistrează-te'}
             </button>

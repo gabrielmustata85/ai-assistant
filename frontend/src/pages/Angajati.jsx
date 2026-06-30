@@ -155,7 +155,7 @@ export default function Angajati() {
             {parsing ? 'Se extrag datele…' : '↑ Încarcă stat de plată'}
           </button>
           <button onClick={() => setShowForm(v => !v)}
-            className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+            className="bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             {showForm ? 'Anulează' : '＋ Adaugă angajat'}
           </button>
         </div>
@@ -204,7 +204,7 @@ export default function Angajati() {
               Anulează
             </button>
             <button type="submit" disabled={saving}
-              className="bg-accent hover:bg-accentHover text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
+              className="bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
               {saving ? 'Se salvează...' : 'Salvează'}
             </button>
           </div>

@@ -91,7 +91,7 @@ export default function AddCompanyModal({ onClose, onCreated }) {
               Anulează
             </button>
             <button type="submit" disabled={loading}
-              className="flex-1 bg-accent hover:bg-accentHover text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
+              className="flex-1 bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
               {loading ? 'Se salvează...' : 'Creează'}
             </button>
           </div>

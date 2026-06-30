@@ -55,7 +55,7 @@ export default function Legislatie() {
             />
           </div>
           <button type="submit" disabled={uploading || !file}
-            className="bg-accent hover:bg-accentHover text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-60 whitespace-nowrap">
+            className="bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] font-medium px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-60 whitespace-nowrap">
             {uploading ? 'Se încarcă...' : 'Încarcă'}
           </button>
         </form>

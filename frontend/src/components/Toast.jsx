@@ -18,11 +18,13 @@ export function ToastProvider({ children }) {
         {toasts.map(t => (
           <div
             key={t.id}
-            className={`px-4 py-3 rounded-lg shadow-md text-sm text-white font-sans ${
-              t.type === 'error' ? 'bg-danger' : 'bg-accent'
-            }`}
+            className="flex items-start gap-3 bg-ink text-onDark pl-3 pr-4 py-3 rounded-xl shadow-[0_12px_30px_-8px_rgba(0,0,0,0.55)] text-sm font-sans"
           >
-            {t.message}
+            <span
+              className="mt-0.5 w-1.5 self-stretch rounded-full shrink-0"
+              style={{ backgroundColor: t.type === 'error' ? '#C73A2B' : '#10916E' }}
+            />
+            <span className="leading-snug">{t.message}</span>
           </div>
         ))}
       </div>

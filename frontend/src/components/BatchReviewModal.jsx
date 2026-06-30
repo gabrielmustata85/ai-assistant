@@ -33,13 +33,13 @@ export default function BatchReviewModal({ items, columnDefs, onSave, onClose, s
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(16,36,58,0.4)' }}>
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(11,27,46,0.6)' }}>
+      <div className="bg-white rounded-2xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)] w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-hairline flex-shrink-0">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-6 bg-accent rounded-sm" />
+              <div className="w-1.5 h-6 bg-accent rounded-full" />
               <h2 className="font-display font-bold text-lg text-ink">Verifică datele extrase</h2>
             </div>
             <p className="text-xs text-muted mt-0.5 ml-4">
@@ -60,13 +60,13 @@ export default function BatchReviewModal({ items, columnDefs, onSave, onClose, s
         {/* Table */}
         <div className="overflow-auto flex-1">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-paper z-10">
-              <tr className="border-b border-hairline">
-                <th className="text-left px-3 py-2.5 text-xs text-muted font-medium whitespace-nowrap">Fișier</th>
+            <thead className="sticky top-0 bg-ink z-10">
+              <tr>
+                <th className="text-left px-3 py-2.5 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide whitespace-nowrap">Fișier</th>
                 {columnDefs.map(col => (
                   <th
                     key={col.key}
-                    className={`px-3 py-2.5 text-xs text-muted font-medium whitespace-nowrap ${col.mono ? 'text-right' : 'text-left'}`}
+                    className={`px-3 py-2.5 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide whitespace-nowrap ${col.mono ? 'text-right' : 'text-left'}`}
                   >
                     {col.label}
                   </th>
@@ -103,7 +103,7 @@ export default function BatchReviewModal({ items, columnDefs, onSave, onClose, s
                 }
 
                 return (
-                  <tr key={row._idx} className="border-t border-hairline hover:bg-paper transition-colors">
+                  <tr key={row._idx} className="border-t border-hairline even:bg-[#F4F6F8] hover:bg-[#EAF3F0] transition-colors">
                     <td className="px-3 py-2 text-xs font-mono text-muted max-w-xs truncate" title={row._filename}>
                       {row._filename}
                     </td>
@@ -179,7 +179,7 @@ export default function BatchReviewModal({ items, columnDefs, onSave, onClose, s
               type="button"
               disabled={saving || validRows.length === 0}
               onClick={() => onSave(validRows)}
-              className="bg-accent hover:bg-accentHover text-white rounded-lg px-5 py-2 text-sm font-medium transition-colors disabled:opacity-60"
+              className="bg-accent hover:bg-accentHover text-white rounded-lg px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-60 shadow-[0_2px_8px_rgba(16,145,110,0.25)]"
             >
               {saving
                 ? 'Se salvează…'

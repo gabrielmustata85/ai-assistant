@@ -158,7 +158,7 @@ export default function Cheltuieli() {
           </button>
           <button
             onClick={() => setShowForm(v => !v)}
-            className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            className="bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
             {showForm ? 'Anulează' : '＋ Adaugă cheltuială'}
           </button>
@@ -203,7 +203,7 @@ export default function Cheltuieli() {
               Anulează
             </button>
             <button type="submit" disabled={saving}
-              className="bg-accent hover:bg-accentHover text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
+              className="bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60">
               {saving ? 'Se salvează...' : fromPdf ? 'Verifică și salvează' : 'Salvează'}
             </button>
           </div>
