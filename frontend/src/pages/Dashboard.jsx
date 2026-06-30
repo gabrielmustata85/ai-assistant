@@ -5,16 +5,34 @@ import { apiFetch } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
 import { parseDeadline, DeadlineBadge } from '../components/ClaudeResponse.jsx'
 
+function StatCard({ label, value, sub }) {
+  return (
+    <div className="bg-white border border-hairline rounded-lg p-5">
+      <div className="h-0.5 w-6 bg-accent mb-3" />
+      <p className="text-xs text-muted uppercase tracking-wide mb-1">{label}</p>
+      <p className="font-display font-bold text-2xl text-ink">{value}</p>
+      {sub && <p className="font-mono text-xs text-muted mt-1 tabular-nums">{sub}</p>}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { selectedCompany } = useCompany()
   const { token } = useAuth()
   const { addToast } = useToast()
+  const [invoiceData, setInvoiceData] = useState([])
+  const [employeeData, setEmployeeData] = useState([])
+  const [expenseData, setExpenseData] = useState([])
   const [obligations, setObligations] = useState(null)
   const [loadingObl, setLoadingObl] = useState(false)
 
   useEffect(() => {
     if (!selectedCompany) return
+    const id = selectedCompany.id
     setObligations(null)
+    apiFetch(`/companies/${id}/invoices`, {}, token).then(d => setInvoiceData(d || [])).catch(() => {})
+    apiFetch(`/companies/${id}/employees`, {}, token).then(d => setEmployeeData(d || [])).catch(() => {})
+    apiFetch(`/companies/${id}/expenses`, {}, token).then(d => setExpenseData(d || [])).catch(() => {})
     loadObligations()
   }, [selectedCompany?.id])
 
@@ -45,6 +63,9 @@ export default function Dashboard() {
     )
   }
 
+  const totalGross = invoiceData.reduce((s, i) => s + (i.grossAmount || 0), 0)
+  const totalSalary = employeeData.filter(e => e.active).reduce((s, e) => s + (e.grossSalary || 0), 0)
+
   const estimari = obligations?.estimari || []
   const termene = obligations?.termene || []
   const recomandari = obligations?.recomandari || []
@@ -59,12 +80,36 @@ export default function Dashboard() {
   const next = dated[0] || termene[0] || null
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="font-display font-bold text-2xl text-ink">{selectedCompany.name}</h1>
-          <p className="text-xs text-muted mt-0.5 font-mono">{selectedCompany.cui}</p>
-        </div>
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="mb-6">
+        <h1 className="font-display font-bold text-2xl text-ink">{selectedCompany.name}</h1>
+        <p className="text-sm text-muted mt-1">
+          <span className="font-mono">{selectedCompany.cui}</span>
+          {' · '}{selectedCompany.companyType}
+          {' · '}{selectedCompany.taxRegime?.replace('_', ' ')}
+          {selectedCompany.vatPayer ? ' · Plătitor TVA' : ''}
+        </p>
+      </div>
+
+      {/* Datele firmei (ca inițial) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <StatCard label="Facturi" value={invoiceData.length} />
+        <StatCard
+          label="Total facturi"
+          value={<span className="font-mono tabular-nums text-xl">{totalGross.toLocaleString('ro-RO', { maximumFractionDigits: 2 })}</span>}
+          sub="LEI brut"
+        />
+        <StatCard label="Angajați activi" value={employeeData.filter(e => e.active).length} />
+        <StatCard
+          label="Fond salarii"
+          value={<span className="font-mono tabular-nums text-xl">{totalSalary.toLocaleString('ro-RO', { maximumFractionDigits: 2 })}</span>}
+          sub="LEI/lună brut"
+        />
+      </div>
+
+      {/* Asistent: cât ai de plătit, până când, și cum scazi taxele */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-semibold text-ink">De la asistent</h2>
         <button
           onClick={loadObligations}
           disabled={loadingObl}
@@ -106,6 +151,9 @@ export default function Dashboard() {
                     </span>
                     <DeadlineBadge scadenta={next.scadenta} />
                   </div>
+                )}
+                {obligations.raspuns && (
+                  <p className="text-sm text-muted mt-3 leading-relaxed">{obligations.raspuns}</p>
                 )}
               </>
             ) : (
