@@ -61,14 +61,26 @@ public class CompanyContextBuilder {
         sb.append("\n");
 
         List<Employee> employees = payrollService.employees(companyId);
-        sb.append("ANGAJAȚI (").append(employees.size()).append("):\n");
+        BigDecimal grossPayroll = BigDecimal.ZERO;
+        int activeCount = 0;
+        for (Employee e : employees) {
+            if (e.isActive() && e.getGrossSalary() != null) {
+                grossPayroll = grossPayroll.add(e.getGrossSalary());
+                activeCount++;
+            }
+        }
+        sb.append("ANGAJAȚI (").append(employees.size())
+          .append(" | activi ").append(activeCount)
+          .append(" | fond salarii brut lunar ").append(grossPayroll)
+          .append(" lei):\n");
         for (Employee e : employees) {
             sb.append("- ").append(e.getFullName())
               .append(" | salariu brut ").append(e.getGrossSalary())
               .append(" | activ ").append(e.isActive())
               .append("\n");
         }
-        sb.append("\n");
+        sb.append("Pe salarii se datorează lunar contribuții și impozit (CAS, CASS, impozit pe venit, ")
+          .append("CAM), declarate prin Declarația 112, cu scadența pe 25 a lunii următoare.\n\n");
 
         List<Expense> expenses = payrollService.expenses(companyId);
         sb.append("ALTE CHELTUIELI (").append(expenses.size()).append("):\n");

@@ -108,6 +108,10 @@ public class AdvisorService {
         String question = ("""
                 Azi este %s. Pe baza datelor firmei (facturi, salarii, cheltuieli, extrase bancare), \
                 estimează TOATE taxele și contribuțiile pe care firma le are de plătit în perioada următoare.
+                - Include OBLIGATORIU taxele pe salarii calculate din fondul de salarii brut lunar al \
+                angajaților activi (CAS 25%, CASS 10%, impozit pe venit 10%, CAM 2.25% — aplicate conform \
+                regulilor în vigoare), cu Declarația 112 și scadența pe 25 a lunii următoare. Dacă firma \
+                nu are angajați activi, nu pune taxe pe salarii.
                 - În `estimari` pune fiecare taxă cu suma estimată și perioada.
                 - În `termene` pune scadențele, ORDONATE de la cea mai apropiată la cea mai îndepărtată, \
                 începând cu cele din luna/lunile imediat următoare față de data de azi.
