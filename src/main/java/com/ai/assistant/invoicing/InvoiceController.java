@@ -15,14 +15,32 @@ import java.util.Map;
 public class InvoiceController {
 
     private final InvoiceService service;
+    private final InvoiceAssistantService assistant;
 
-    public InvoiceController(InvoiceService service) {
+    public InvoiceController(InvoiceService service, InvoiceAssistantService assistant) {
         this.service = service;
+        this.assistant = assistant;
     }
 
     @PostMapping("/companies/{companyId}/invoices")
     public ResponseEntity<Invoice> add(@PathVariable Long companyId, @RequestBody Invoice invoice) {
         return ResponseEntity.ok(service.add(companyId, invoice));
+    }
+
+    /** Marius pregătește o schiță de factură dintr-o instrucțiune; userul o verifică și o emite. */
+    @PostMapping("/companies/{companyId}/invoices/draft")
+    public ResponseEntity<?> draft(@PathVariable Long companyId, @RequestBody Map<String, String> body) {
+        String instruction = body.get("instruction");
+        if (instruction == null || instruction.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lipsește 'instruction'."));
+        }
+        try {
+            return ResponseEntity.ok(assistant.draft(companyId, instruction));
+        } catch (Exception e) {
+            log.error("Invoice draft failed: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getClass().getSimpleName(), "message", String.valueOf(e.getMessage())));
+        }
     }
 
     /** Încarcă un PDF de factură; Claude extrage datele și le întoarce (nu salvează — userul confirmă). */

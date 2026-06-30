@@ -10,33 +10,45 @@ import com.anthropic.models.messages.StructuredMessageCreateParams;
 import com.anthropic.models.messages.StructuredTextBlock;
 import com.anthropic.models.messages.ThinkingConfigAdaptive;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 
+/**
+ * Client Claude cu două niveluri de model pentru a controla costul:
+ *  - HEAVY: consiliere/raționament (estimări fiscale, chat, generare factură). Implicit Opus.
+ *  - LIGHT: extragere structurată de mare volum (parsare PDF-uri). Implicit Haiku, mult mai ieftin.
+ * Ambele se pot suprascrie din env: ANTHROPIC_MODEL_HEAVY / ANTHROPIC_MODEL_LIGHT.
+ * Pentru economie totală, setează ambele pe un model ieftin.
+ */
 @Slf4j
 @Lazy
 @Service
 public class ClaudeClient {
 
-    private static final long MAX_TOKENS = 16000L;
-
-    // SDK 2.34.0 does not yet have CLAUDE_OPUS_4_8 as a constant; use Model.of() instead.
-    private static final Model MODEL = Model.of("claude-opus-4-8");
+    private static final long MAX_TOKENS_HEAVY = 16000L;
+    private static final long MAX_TOKENS_LIGHT = 8000L;
 
     private final AnthropicClient client;
+    private final Model modelHeavy;
+    private final Model modelLight;
 
-    public ClaudeClient() {
-        // Citește ANTHROPIC_API_KEY din mediu.
-        this.client = AnthropicOkHttpClient.fromEnv();
+    public ClaudeClient(
+            @Value("${anthropic.model.heavy:claude-opus-4-8}") String heavy,
+            @Value("${anthropic.model.light:claude-haiku-4-5}") String light) {
+        this.client = AnthropicOkHttpClient.fromEnv();   // citește ANTHROPIC_API_KEY
+        this.modelHeavy = Model.of(heavy);
+        this.modelLight = Model.of(light);
+        log.info("ClaudeClient: heavy={}, light={}", heavy, light);
     }
 
-    /** Răspuns text liber pentru interogări generale. */
+    /** Răspuns text liber (consiliere) — model HEAVY, gândire adaptivă. */
     public String generateText(String prompt) {
         MessageCreateParams params = MessageCreateParams.builder()
-                .model(MODEL)
-                .maxTokens(MAX_TOKENS)
+                .model(modelHeavy)
+                .maxTokens(MAX_TOKENS_HEAVY)
                 .thinking(ThinkingConfigAdaptive.builder().build())
                 .addUserMessage(prompt)
                 .build();
@@ -48,19 +60,29 @@ public class ClaudeClient {
                 .collect(Collectors.joining("\n"));
     }
 
-    /** Răspuns structurat JSON conform ClaudeResponse. */
+    /** Răspuns structurat de consiliere (ClaudeResponse) — model HEAVY. */
     public ClaudeResponse ask(String prompt) {
-        return extractStructured(prompt, ClaudeResponse.class);
+        return structured(prompt, ClaudeResponse.class, modelHeavy, MAX_TOKENS_HEAVY, true);
     }
 
-    /** Extrage din prompt un obiect structurat conform clasei date (output structurat Claude). */
+    /** Extragere structurată de mare volum (parsare PDF) — model LIGHT, ieftin, fără gândire. */
     public <T> T extractStructured(String prompt, Class<T> schemaClass) {
-        // outputConfig(Class<T>, JsonSchemaLocalValidation) transitions the builder to
-        // StructuredMessageCreateParams.Builder<T>; JsonSchemaLocalValidation.NO skips local validation.
-        StructuredMessageCreateParams<T> params = MessageCreateParams.builder()
-                .model(MODEL)
-                .maxTokens(MAX_TOKENS)
-                .thinking(ThinkingConfigAdaptive.builder().build())
+        return structured(prompt, schemaClass, modelLight, MAX_TOKENS_LIGHT, false);
+    }
+
+    /** Extragere structurată care necesită raționament (ex: generarea unei facturi) — model HEAVY. */
+    public <T> T extractStructuredHeavy(String prompt, Class<T> schemaClass) {
+        return structured(prompt, schemaClass, modelHeavy, MAX_TOKENS_HEAVY, true);
+    }
+
+    private <T> T structured(String prompt, Class<T> schemaClass, Model model, long maxTokens, boolean thinking) {
+        MessageCreateParams.Builder builder = MessageCreateParams.builder()
+                .model(model)
+                .maxTokens(maxTokens);
+        if (thinking) {
+            builder.thinking(ThinkingConfigAdaptive.builder().build());
+        }
+        StructuredMessageCreateParams<T> params = builder
                 .outputConfig(schemaClass, JsonSchemaLocalValidation.NO)
                 .addUserMessage(prompt)
                 .build();

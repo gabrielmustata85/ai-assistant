@@ -43,6 +43,13 @@ export default function Facturi() {
   const [batchSaving, setBatchSaving] = useState(false)
   const [batchProgress, setBatchProgress] = useState(null)
 
+  // Generare cu Marius
+  const [showGen, setShowGen] = useState(false)
+  const [genText, setGenText] = useState('')
+  const [genLoading, setGenLoading] = useState(false)
+  const [genQuestions, setGenQuestions] = useState([])
+  const [genMessage, setGenMessage] = useState('')
+
   useEffect(() => {
     if (!selectedCompany) return
     apiFetch(`/companies/${selectedCompany.id}/invoices`, {}, token)
@@ -71,6 +78,49 @@ export default function Facturi() {
       addToast(err.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleGenerate() {
+    if (!genText.trim()) return
+    setGenLoading(true)
+    setGenQuestions([])
+    setGenMessage('')
+    try {
+      const draft = await apiFetch(
+        `/companies/${selectedCompany.id}/invoices/draft`,
+        { method: 'POST', body: JSON.stringify({ instruction: genText }) },
+        token
+      )
+      const num = v => (v != null && v !== 0 ? String(v) : '')
+      if (draft.ready) {
+        // Prefill formularul pentru verificare înainte de emitere.
+        setForm({
+          direction: draft.direction || 'ISSUED',
+          invoiceNumber: draft.invoiceNumber || '',
+          partnerName: draft.partnerName || '',
+          partnerCui: draft.partnerCui || '',
+          issueDate: draft.issueDate || '',
+          dueDate: draft.dueDate || '',
+          netAmount: num(draft.netAmount),
+          vatAmount: num(draft.vatAmount),
+          grossAmount: num(draft.grossAmount),
+          category: draft.category || '',
+          deductible: false,
+        })
+        setShowForm(true)
+        setShowGen(false)
+        setGenText('')
+        addToast('Marius a pregătit factura — verifică detaliile și emite.', 'success')
+      } else {
+        // Marius cere ce lipsește.
+        setGenMessage(draft.message || 'Mai am nevoie de câteva detalii.')
+        setGenQuestions(draft.missing || [])
+      }
+    } catch (err) {
+      addToast(err.message || 'Eroare la generare.', 'error')
+    } finally {
+      setGenLoading(false)
     }
   }
 
@@ -177,6 +227,13 @@ export default function Facturi() {
             {parsing ? `Se extrage datele…` : '↑ Încarcă PDF'}
           </button>
           <button
+            type="button"
+            onClick={() => { setShowGen(v => !v); setGenQuestions([]); setGenMessage('') }}
+            className="border border-ink text-ink hover:bg-ink hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            ✨ Generează cu Marius
+          </button>
+          <button
             onClick={() => setShowForm(v => !v)}
             className="bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
@@ -184,6 +241,56 @@ export default function Facturi() {
           </button>
         </div>
       </div>
+
+      {showGen && (
+        <div className="bg-ink rounded-2xl p-5 mb-6 shadow-[0_10px_40px_-12px_rgba(11,27,46,0.5)]">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-1.5 h-6 bg-accent rounded-full" />
+            <div>
+              <p className="font-display font-semibold text-white leading-none">Spune-i lui Marius ce factură să pregătească</p>
+              <p className="text-[11px] text-onDarkMuted mt-1">Ex: „factură pentru SC Alfa SRL, consultanță IT, 1000 lei + TVA, scadent 15 zile”</p>
+            </div>
+          </div>
+          <textarea
+            rows={2}
+            value={genText}
+            onChange={e => setGenText(e.target.value)}
+            placeholder="Descrie factura în cuvintele tale…"
+            className="w-full rounded-lg px-3 py-2 text-sm bg-white/95 text-ink focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+          />
+          {genMessage && (
+            <div className="mt-3 text-sm text-onDark">
+              <span className="text-accent font-medium">Marius:</span> {genMessage}
+              {genQuestions.length > 0 && (
+                <ul className="mt-1.5 space-y-1">
+                  {genQuestions.map((q, i) => (
+                    <li key={i} className="text-onDarkMuted flex items-start gap-2">
+                      <span className="text-accent mt-0.5">?</span>{q}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          <div className="flex justify-end gap-3 mt-3">
+            <button
+              type="button"
+              onClick={() => { setShowGen(false); setGenText(''); setGenQuestions([]); setGenMessage('') }}
+              className="text-sm text-onDarkMuted hover:text-white px-3 py-2 transition-colors"
+            >
+              Anulează
+            </button>
+            <button
+              type="button"
+              disabled={genLoading || !genText.trim()}
+              onClick={handleGenerate}
+              className="bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+            >
+              {genLoading ? 'Marius pregătește…' : (genQuestions.length > 0 ? 'Trimite din nou' : 'Cere lui Marius')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleAdd} className="bg-white border border-hairline rounded-lg p-5 mb-6 space-y-4">
