@@ -70,6 +70,21 @@ export default function Layout() {
     return () => { clearInterval(iv); window.removeEventListener('quota-exceeded', onQuota) }
   }, [refreshUsage])
 
+  const [upgrading, setUpgrading] = useState(false)
+  async function handleUpgrade(plan) {
+    setUpgrading(true)
+    try {
+      const s = await apiFetch('/usage/upgrade', { method: 'POST', body: JSON.stringify({ plan }) }, token)
+      setUsage(s)
+      setShowUpgrade(false)
+      addToast(`Plan ${plan} activat — limită nouă: ${fmtTokens(s.limit)} tokens/lună.`, 'success')
+    } catch (err) {
+      addToast(err.message || 'Nu am putut activa planul.')
+    } finally {
+      setUpgrading(false)
+    }
+  }
+
   function handleLogout() {
     logout()
     navigate('/login')
@@ -149,7 +164,7 @@ export default function Layout() {
       )}
 
       {showUpgrade && usage && (
-        <UpgradeModal usage={usage} onClose={() => setShowUpgrade(false)} />
+        <UpgradeModal usage={usage} busy={upgrading} onChoose={handleUpgrade} onClose={() => setShowUpgrade(false)} />
       )}
     </CompanyContext.Provider>
   )
@@ -188,33 +203,72 @@ function UsageBar({ usage, onUpgrade }) {
   )
 }
 
-function UpgradeModal({ usage, onClose }) {
+const PLANS = [
+  {
+    key: 'PRO', name: 'Pro', tokens: '5.000.000', price: '99 lei', period: '/ lună',
+    desc: 'Pentru firme active: estimări, chat cu Marius și generare de facturi fără griji.',
+  },
+  {
+    key: 'MAX', name: 'Max', tokens: '20.000.000', price: '299 lei', period: '/ lună',
+    desc: 'Volum mare: contabilitate intensă, multe PDF-uri și documente pe lună.',
+    featured: true,
+  },
+]
+
+function UpgradeModal({ usage, busy, onChoose, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(11,27,46,0.6)' }}>
-      <div className="bg-white rounded-2xl p-7 max-w-sm w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(11,27,46,0.65)' }}>
+      <div className="bg-white rounded-2xl p-7 max-w-lg w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
         <div className="h-0.5 w-10 bg-accent mb-4" />
-        <h2 className="font-display font-bold text-xl text-ink mb-2">Ai atins limita lunară</h2>
-        <p className="text-sm text-muted mb-1">
+        <h2 className="font-display font-bold text-xl text-ink mb-1">Ai atins limita lunară</h2>
+        <p className="text-sm text-muted mb-5">
           Ai folosit tot bugetul de tokens AI pe luna aceasta
           {' '}(<span className="font-mono">{fmtTokens(usage.used)}/{fmtTokens(usage.limit)}</span>).
+          Alege un plan ca să continui cu asistentul.
         </p>
-        <p className="text-sm text-muted mb-5">
-          Funcțiile cu asistentul (estimări, chat, generare facturi, extragere din PDF) sunt oprite
-          până la resetarea de luna viitoare sau până faci upgrade.
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 border border-hairline rounded-lg px-4 py-2 text-sm text-muted hover:bg-paper transition-colors"
-          >
-            Închide
+
+        <div className="grid sm:grid-cols-2 gap-3 mb-5">
+          {PLANS.map(p => {
+            const current = usage.plan === p.key
+            return (
+              <div
+                key={p.key}
+                className={`rounded-xl border p-4 flex flex-col ${p.featured ? 'border-accent' : 'border-hairline'}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-display font-bold text-ink text-lg">{p.name}</span>
+                  {p.featured && (
+                    <span className="text-[10px] uppercase tracking-wide font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                      Recomandat
+                    </span>
+                  )}
+                </div>
+                <p className="text-ink">
+                  <span className="font-display font-bold text-2xl">{p.price}</span>
+                  <span className="text-muted text-sm"> {p.period}</span>
+                </p>
+                <p className="font-mono text-xs text-accent mt-1">{p.tokens} tokens / lună</p>
+                <p className="text-xs text-muted mt-2 flex-1">{p.desc}</p>
+                <button
+                  disabled={busy || current}
+                  onClick={() => onChoose(p.key)}
+                  className={`mt-3 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60 ${
+                    p.featured
+                      ? 'bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)]'
+                      : 'border border-ink text-ink hover:bg-ink hover:text-white'
+                  }`}
+                >
+                  {current ? 'Plan curent' : busy ? 'Se activează…' : `Alege ${p.name}`}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="flex justify-end">
+          <button onClick={onClose} className="text-sm text-muted hover:text-ink px-3 py-2 transition-colors">
+            Mai târziu
           </button>
-          <a
-            href="mailto:office@levelapp.ro?subject=Upgrade%20plan%20asistent%20fiscal"
-            className="flex-1 text-center bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
-          >
-            Solicită upgrade
-          </a>
         </div>
       </div>
     </div>

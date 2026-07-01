@@ -26,10 +26,14 @@ public class UsageQuota {
     @Column(name = "token_limit", nullable = false)
     private long tokenLimit;
 
+    @Column(nullable = false, length = 16)
+    private String plan = "FREE";
+
     public UsageQuota(Long userId, String periodYm, long tokensUsed, long tokenLimit) {
         this.userId = userId;
         this.periodYm = periodYm;
         this.tokensUsed = tokensUsed;
         this.tokenLimit = tokenLimit;
+        this.plan = "FREE";
     }
 }
