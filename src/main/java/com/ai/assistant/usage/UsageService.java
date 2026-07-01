@@ -24,8 +24,8 @@ public class UsageService {
     private final long paidWindowSec;
 
     public UsageService(UsageQuotaRepository repo,
-                        @Value("${usage.free.token-limit:120000}") long freeLimit,
-                        @Value("${usage.free.window-seconds:18000}") long freeWindowSec,
+                        @Value("${usage.free.token-limit:50000}") long freeLimit,
+                        @Value("${usage.free.window-seconds:14400}") long freeWindowSec,
                         @Value("${usage.plan.pro-limit:5000000}") long proLimit,
                         @Value("${usage.plan.max-limit:20000000}") long maxLimit,
                         @Value("${usage.paid.window-seconds:2592000}") long paidWindowSec) {
