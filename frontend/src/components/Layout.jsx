@@ -176,14 +176,25 @@ function fmtTokens(n) {
   return String(v)
 }
 
+function fmtReset(resetAt) {
+  const ms = (Number(resetAt) || 0) - Date.now()
+  if (ms <= 0) return 'curând'
+  const h = Math.floor(ms / 3600000)
+  const m = Math.floor((ms % 3600000) / 60000)
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
 function UsageBar({ usage, onUpgrade }) {
   const pct = usage.limit > 0 ? Math.min(100, Math.round((usage.used / usage.limit) * 100)) : 0
   const exhausted = usage.used >= usage.limit
   const color = exhausted ? '#C73A2B' : pct >= 80 ? '#B5611A' : '#10916E'
+  const isFree = (usage.plan || 'FREE') === 'FREE'
   return (
     <div className="px-3 pt-3">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] uppercase tracking-[0.12em] text-onDarkMuted">Consum AI</span>
+        <span className="text-[10px] uppercase tracking-[0.12em] text-onDarkMuted">
+          Consum AI{isFree ? ' · Free' : ` · ${usage.plan}`}
+        </span>
         <span className="text-[10px] font-mono text-onDarkMuted">{pct}%</span>
       </div>
       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -191,9 +202,9 @@ function UsageBar({ usage, onUpgrade }) {
       </div>
       <div className="flex items-center justify-between mt-1">
         <span className="text-[10px] font-mono text-onDarkMuted">
-          {fmtTokens(usage.used)} / {fmtTokens(usage.limit)} tokens
+          {exhausted && isFree ? `Resetare în ${fmtReset(usage.resetAt)}` : `${fmtTokens(usage.used)} / ${fmtTokens(usage.limit)}`}
         </span>
-        {exhausted && (
+        {(exhausted || isFree) && (
           <button onClick={onUpgrade} className="text-[10px] font-semibold text-accent hover:underline">
             Upgrade
           </button>
@@ -220,11 +231,11 @@ function UpgradeModal({ usage, busy, onChoose, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(11,27,46,0.65)' }}>
       <div className="bg-white rounded-2xl p-7 max-w-lg w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
         <div className="h-0.5 w-10 bg-accent mb-4" />
-        <h2 className="font-display font-bold text-xl text-ink mb-1">Ai atins limita lunară</h2>
+        <h2 className="font-display font-bold text-xl text-ink mb-1">Ai atins limita de întrebări</h2>
         <p className="text-sm text-muted mb-5">
-          Ai folosit tot bugetul de tokens AI pe luna aceasta
-          {' '}(<span className="font-mono">{fmtTokens(usage.used)}/{fmtTokens(usage.limit)}</span>).
-          Alege un plan ca să continui cu asistentul.
+          Pe planul Free poți folosi asistentul în reprize scurte.
+          {' '}Se resetează peste <span className="font-semibold text-ink">{fmtReset(usage.resetAt)}</span> —
+          sau treci la un plan și continui <span className="font-semibold text-ink">acum</span>, fără așteptare.
         </p>
 
         <div className="grid sm:grid-cols-2 gap-3 mb-5">

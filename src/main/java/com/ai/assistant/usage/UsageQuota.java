@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "usage_quota")
 @Data
@@ -28,6 +30,10 @@ public class UsageQuota {
 
     @Column(nullable = false, length = 16)
     private String plan = "FREE";
+
+    /** Începutul ferestrei curente de consum; consumul se resetează după lungimea ferestrei planului. */
+    @Column(name = "window_start", nullable = false)
+    private Instant windowStart = Instant.now();
 
     public UsageQuota(Long userId, String periodYm, long tokensUsed, long tokenLimit) {
         this.userId = userId;

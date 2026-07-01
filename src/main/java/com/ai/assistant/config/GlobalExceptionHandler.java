@@ -34,7 +34,8 @@ public class GlobalExceptionHandler {
                 "error", "QuotaExceeded",
                 "message", e.getMessage(),
                 "used", e.getUsed(),
-                "limit", e.getLimit()));
+                "limit", e.getLimit(),
+                "resetAt", e.getResetAt()));
     }
 
     /** Erori de la API-ul Claude (Anthropic) — le scoatem în răspuns, nu un 500 generic. */
