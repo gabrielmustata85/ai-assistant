@@ -30,6 +30,8 @@ public class InvoicePdfParser {
                 factură/rând. Pentru fiecare: număr, partener, CUI partener, data emiterii (YYYY-MM-DD),
                 scadența, net, TVA, brut (numere cu punct zecimal, fără simbol valutar), categorie,
                 deductibil, și `direction` (ISSUED dacă firma a emis-o, RECEIVED dacă a primit-o).
+                Extrage și datele de contact ale PARTENERULUI dacă apar pe factură: IBAN, telefon,
+                email, adresă/sediu.
                 Dacă un câmp lipsește, lasă-l gol (0 pentru sume).
 
                 === TEXT DOCUMENT ===

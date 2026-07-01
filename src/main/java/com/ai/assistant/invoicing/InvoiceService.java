@@ -3,6 +3,7 @@ package com.ai.assistant.invoicing;
 import com.ai.assistant.common.BatchParseResult;
 import com.ai.assistant.company.Company;
 import com.ai.assistant.company.CompanyService;
+import com.ai.assistant.partner.PartnerService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,15 +18,17 @@ public class InvoiceService {
     private final InvoicePdfParser pdfParser;
     private final InvoicePdfGenerator pdfGenerator;
     private final InvoiceDocumentRepository documentRepository;
+    private final PartnerService partnerService;
 
     public InvoiceService(InvoiceRepository repository, CompanyService companyService,
                           InvoicePdfParser pdfParser, InvoicePdfGenerator pdfGenerator,
-                          InvoiceDocumentRepository documentRepository) {
+                          InvoiceDocumentRepository documentRepository, PartnerService partnerService) {
         this.repository = repository;
         this.companyService = companyService;
         this.pdfParser = pdfParser;
         this.pdfGenerator = pdfGenerator;
         this.documentRepository = documentRepository;
+        this.partnerService = partnerService;
     }
 
     /**
@@ -73,6 +76,9 @@ public class InvoiceService {
                             new InvoiceDocument(companyId, name, file.getContentType(), file.getBytes()));
                     for (ParsedInvoice inv : invoices) {
                         results.add(BatchParseResult.ok(name, inv, doc.getId()));
+                        // Auto-populează colaboratorul cu datele de contact de pe factură.
+                        partnerService.upsertFromInvoice(companyId, inv.partnerName(), inv.partnerCui(),
+                                inv.partnerIban(), inv.partnerPhone(), inv.partnerEmail(), inv.partnerAddress());
                     }
                 }
             } catch (Exception e) {

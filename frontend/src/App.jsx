@@ -13,6 +13,7 @@ import Cheltuieli from './pages/Cheltuieli.jsx'
 import Legislatie from './pages/Legislatie.jsx'
 import Asistent from './pages/Asistent.jsx'
 import ExtraseBancare from './pages/ExtraseBancare.jsx'
+import Colaboratori from './pages/Colaboratori.jsx'
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="facturi" element={<Facturi />} />
               <Route path="angajati" element={<Angajati />} />
               <Route path="cheltuieli" element={<Cheltuieli />} />
+              <Route path="colaboratori" element={<Colaboratori />} />
               <Route path="legislatie" element={<Legislatie />} />
               <Route path="asistent" element={<Asistent />} />
               <Route path="extrase" element={<ExtraseBancare />} />

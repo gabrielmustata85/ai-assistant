@@ -15,5 +15,9 @@ public record ParsedInvoice(
         @JsonPropertyDescription("Valoarea TVA") double vatAmount,
         @JsonPropertyDescription("Valoarea totală, cu TVA inclus") double grossAmount,
         @JsonPropertyDescription("Categoria cheltuielii (ex: carburant, chirie, marfă, utilități, servicii)") String category,
-        @JsonPropertyDescription("true dacă pare o cheltuială deductibilă fiscal") boolean deductible) {
+        @JsonPropertyDescription("true dacă pare o cheltuială deductibilă fiscal") boolean deductible,
+        @JsonPropertyDescription("IBAN-ul partenerului dacă apare pe factură; altfel gol") String partnerIban,
+        @JsonPropertyDescription("Telefonul partenerului dacă apare; altfel gol") String partnerPhone,
+        @JsonPropertyDescription("Emailul partenerului dacă apare; altfel gol") String partnerEmail,
+        @JsonPropertyDescription("Adresa/sediul partenerului dacă apare; altfel gol") String partnerAddress) {
 }
