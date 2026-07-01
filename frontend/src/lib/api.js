@@ -34,6 +34,11 @@ export async function apiFetch(path, options = {}, token = null) {
     return
   }
 
+  // Limită de tokens atinsă — anunță aplicația să arate ecranul de upgrade.
+  if (res.status === 402) {
+    window.dispatchEvent(new CustomEvent('quota-exceeded'))
+  }
+
   if (res.status === 204) return null
 
   const text = await res.text()

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react'
+import React, { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
@@ -46,6 +46,8 @@ export default function Layout() {
   const [companies, setCompanies] = useState([])
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [usage, setUsage] = useState(null)
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
     apiFetch('/companies', {}, token)
@@ -55,6 +57,18 @@ export default function Layout() {
       })
       .catch(err => addToast(err.message))
   }, [])
+
+  const refreshUsage = useCallback(() => {
+    apiFetch('/usage', {}, token).then(setUsage).catch(() => {})
+  }, [token])
+
+  useEffect(() => {
+    refreshUsage()
+    const iv = setInterval(refreshUsage, 15000)   // ține bara la zi după acțiuni AI
+    const onQuota = () => { refreshUsage(); setShowUpgrade(true) }
+    window.addEventListener('quota-exceeded', onQuota)
+    return () => { clearInterval(iv); window.removeEventListener('quota-exceeded', onQuota) }
+  }, [refreshUsage])
 
   function handleLogout() {
     logout()
@@ -105,6 +119,8 @@ export default function Layout() {
             ))}
           </nav>
 
+          {usage && <UsageBar usage={usage} onUpgrade={() => setShowUpgrade(true)} />}
+
           <div className="px-3 py-4 border-t border-white/10">
             <p className="text-xs text-onDarkMuted px-1 mb-2 truncate">{user?.username}</p>
             <button
@@ -131,6 +147,76 @@ export default function Layout() {
           }}
         />
       )}
+
+      {showUpgrade && usage && (
+        <UpgradeModal usage={usage} onClose={() => setShowUpgrade(false)} />
+      )}
     </CompanyContext.Provider>
+  )
+}
+
+function fmtTokens(n) {
+  const v = Number(n) || 0
+  if (v >= 1000) return `${(v / 1000).toFixed(v >= 100000 ? 0 : 1)}k`
+  return String(v)
+}
+
+function UsageBar({ usage, onUpgrade }) {
+  const pct = usage.limit > 0 ? Math.min(100, Math.round((usage.used / usage.limit) * 100)) : 0
+  const exhausted = usage.used >= usage.limit
+  const color = exhausted ? '#C73A2B' : pct >= 80 ? '#B5611A' : '#10916E'
+  return (
+    <div className="px-3 pt-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[10px] uppercase tracking-[0.12em] text-onDarkMuted">Consum AI</span>
+        <span className="text-[10px] font-mono text-onDarkMuted">{pct}%</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-[10px] font-mono text-onDarkMuted">
+          {fmtTokens(usage.used)} / {fmtTokens(usage.limit)} tokens
+        </span>
+        {exhausted && (
+          <button onClick={onUpgrade} className="text-[10px] font-semibold text-accent hover:underline">
+            Upgrade
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function UpgradeModal({ usage, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(11,27,46,0.6)' }}>
+      <div className="bg-white rounded-2xl p-7 max-w-sm w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
+        <div className="h-0.5 w-10 bg-accent mb-4" />
+        <h2 className="font-display font-bold text-xl text-ink mb-2">Ai atins limita lunară</h2>
+        <p className="text-sm text-muted mb-1">
+          Ai folosit tot bugetul de tokens AI pe luna aceasta
+          {' '}(<span className="font-mono">{fmtTokens(usage.used)}/{fmtTokens(usage.limit)}</span>).
+        </p>
+        <p className="text-sm text-muted mb-5">
+          Funcțiile cu asistentul (estimări, chat, generare facturi, extragere din PDF) sunt oprite
+          până la resetarea de luna viitoare sau până faci upgrade.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 border border-hairline rounded-lg px-4 py-2 text-sm text-muted hover:bg-paper transition-colors"
+          >
+            Închide
+          </button>
+          <a
+            href="mailto:office@levelapp.ro?subject=Upgrade%20plan%20asistent%20fiscal"
+            className="flex-1 text-center bg-accent hover:bg-accentHover text-white shadow-[0_2px_8px_rgba(16,145,110,0.25)] rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+          >
+            Solicită upgrade
+          </a>
+        </div>
+      </div>
+    </div>
   )
 }

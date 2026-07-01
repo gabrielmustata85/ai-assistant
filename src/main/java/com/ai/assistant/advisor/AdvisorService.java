@@ -56,7 +56,9 @@ public class AdvisorService {
         }
 
         String prompt = promptBuilder.build(question, conversation, companyContext, legislation);
-        ClaudeResponse response = claudeClient.ask(prompt);
+        // Triaj ieftin: întrebările simple primesc modelul ieftin, cele complexe pe cel puternic.
+        boolean complex = claudeClient.classifyComplex(question);
+        ClaudeResponse response = claudeClient.ask(prompt, complex);
 
         // Fix 2: build full AI text for persistence; use short summary only for conversation memory
         String aiText = buildAuditText(response);
