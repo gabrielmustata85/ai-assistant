@@ -57,6 +57,16 @@ public class Invoice {
     @Column(nullable = false)
     private boolean deductible;
 
+    // Detaliile liniei (pentru factura generată în stil clasic)
+    @Column(length = 16)
+    private String unit;
+
+    @Column(precision = 14, scale = 3)
+    private BigDecimal quantity;
+
+    @Column(name = "unit_price", precision = 14, scale = 2)
+    private BigDecimal unitPrice;
+
     /** Id-ul fișierului PDF original încărcat (dacă factura provine dintr-un upload). */
     @Column(name = "source_document_id")
     private Long sourceDocumentId;

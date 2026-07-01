@@ -35,6 +35,25 @@ public class Company {
     @Column(name = "vat_payer", nullable = false)
     private Boolean vatPayer;
 
+    // Date pentru facturare (vânzător)
+    @Column(name = "reg_com", length = 64)
+    private String regCom;
+
+    @Column(length = 512)
+    private String address;
+
+    @Column(length = 34)
+    private String iban;
+
+    @Column(length = 64)
+    private String bank;
+
+    @Column(length = 32)
+    private String phone;
+
+    @Column(length = 128)
+    private String email;
+
     @Column(name = "owner_user_id")
     private Long ownerUserId;
 

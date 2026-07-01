@@ -10,6 +10,7 @@ const EMPTY_FORM = {
   direction: 'ISSUED', invoiceNumber: '', partnerName: '', partnerCui: '',
   issueDate: '', dueDate: '', netAmount: '', vatAmount: '', grossAmount: '',
   category: '', deductible: false,
+  unit: '', quantity: '', unitPrice: '',
 }
 
 const INVOICE_COLUMNS = [
@@ -66,6 +67,8 @@ export default function Facturi() {
         netAmount: parseFloat(form.netAmount) || 0,
         vatAmount: parseFloat(form.vatAmount) || 0,
         grossAmount: parseFloat(form.grossAmount),
+        quantity: form.quantity ? parseFloat(form.quantity) : null,
+        unitPrice: form.unitPrice ? parseFloat(form.unitPrice) : null,
       }
       const inv = await apiFetch(`/companies/${selectedCompany.id}/invoices`, {
         method: 'POST', body: JSON.stringify(body),
@@ -107,6 +110,9 @@ export default function Facturi() {
           grossAmount: num(draft.grossAmount),
           category: draft.category || '',
           deductible: false,
+          unit: draft.unit || '',
+          quantity: num(draft.quantity),
+          unitPrice: num(draft.unitPrice),
         })
         setShowForm(true)
         setShowGen(false)
@@ -197,6 +203,9 @@ export default function Facturi() {
           grossAmount: parseFloat(row.grossAmount) || 0,
           category: row.category || '',
           deductible: Boolean(row.deductible),
+          unit: row.unit || '',
+          quantity: row.quantity ? parseFloat(row.quantity) : null,
+          unitPrice: row.unitPrice ? parseFloat(row.unitPrice) : null,
           sourceDocumentId: row._documentId ?? null,
         }
         const inv = await apiFetch(`/companies/${selectedCompany.id}/invoices`, {
@@ -366,9 +375,25 @@ export default function Facturi() {
                 value={form.grossAmount} onChange={e => setForm(f => ({ ...f, grossAmount: e.target.value }))} required />
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">Categorie</label>
+              <label className="block text-xs text-muted mb-1">Descriere / categorie</label>
               <input className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                 value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">U.M.</label>
+              <input className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                placeholder="ore, buc…"
+                value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Cantitate</label>
+              <input type="number" step="0.001" className="w-full border border-hairline rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+                value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Preț unitar (LEI)</label>
+              <input type="number" step="0.01" className="w-full border border-hairline rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+                value={form.unitPrice} onChange={e => setForm(f => ({ ...f, unitPrice: e.target.value }))} />
             </div>
             <div className="flex items-end pb-1">
               <label className="flex items-center gap-2 text-sm text-ink">

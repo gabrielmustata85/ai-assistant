@@ -92,8 +92,13 @@ export default function Layout() {
     navigate('/login')
   }
 
+  function updateCompany(updated) {
+    setCompanies(prev => prev.map(c => (c.id === updated.id ? updated : c)))
+    setSelectedCompany(prev => (prev && prev.id === updated.id ? updated : prev))
+  }
+
   return (
-    <CompanyContext.Provider value={{ selectedCompany, setSelectedCompany, companies }}>
+    <CompanyContext.Provider value={{ selectedCompany, setSelectedCompany, companies, updateCompany }}>
       <div className="flex h-screen overflow-hidden bg-paper">
         <aside className="w-64 flex-shrink-0 bg-ink flex flex-col">
           <div className="px-5 py-5">

@@ -19,5 +19,9 @@ public record ParsedInvoice(
         @JsonPropertyDescription("IBAN-ul partenerului dacă apare pe factură; altfel gol") String partnerIban,
         @JsonPropertyDescription("Telefonul partenerului dacă apare; altfel gol") String partnerPhone,
         @JsonPropertyDescription("Emailul partenerului dacă apare; altfel gol") String partnerEmail,
-        @JsonPropertyDescription("Adresa/sediul partenerului dacă apare; altfel gol") String partnerAddress) {
+        @JsonPropertyDescription("Adresa/sediul partenerului dacă apare; altfel gol") String partnerAddress,
+        @JsonPropertyDescription("Nr. de ordine în registrul comerțului al partenerului (ex: J23/5883/2021); altfel gol") String partnerRegCom,
+        @JsonPropertyDescription("Unitatea de măsură a liniei (ex: ore, buc, luni); altfel gol") String unit,
+        @JsonPropertyDescription("Cantitatea de pe linia facturii; 0 dacă lipsește") double quantity,
+        @JsonPropertyDescription("Prețul unitar (fără TVA); 0 dacă lipsește") double unitPrice) {
 }

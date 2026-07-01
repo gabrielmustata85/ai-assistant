@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
 
-const EMPTY = { name: '', cui: '', iban: '', phone: '', email: '', address: '' }
+const EMPTY = { name: '', cui: '', regCom: '', iban: '', phone: '', email: '', address: '' }
 
 export default function Colaboratori() {
   const { selectedCompany } = useCompany()
@@ -58,6 +58,7 @@ export default function Colaboratori() {
   const FIELDS = [
     { key: 'name', label: 'Nume', required: true },
     { key: 'cui', label: 'CUI', mono: true },
+    { key: 'regCom', label: 'Nr. reg. com.', mono: true },
     { key: 'iban', label: 'IBAN', mono: true },
     { key: 'phone', label: 'Telefon', mono: true },
     { key: 'email', label: 'Email' },
@@ -118,6 +119,7 @@ export default function Colaboratori() {
               <tr className="bg-ink">
                 <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Nume</th>
                 <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">CUI</th>
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Reg. com.</th>
                 <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">IBAN</th>
                 <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Telefon</th>
                 <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Email</th>
@@ -130,6 +132,7 @@ export default function Colaboratori() {
                 <tr key={p.id} className="border-t border-hairline even:bg-[#F4F6F8] hover:bg-[#EAF3F0] transition-colors">
                   <td className="px-4 py-2.5 font-medium text-ink">{p.name}</td>
                   <td className="px-4 py-2.5 font-mono text-xs tabular-nums text-muted">{p.cui || '—'}</td>
+                  <td className="px-4 py-2.5 font-mono text-xs text-muted">{p.regCom || '—'}</td>
                   <td className="px-4 py-2.5 font-mono text-xs text-muted">{p.iban || '—'}</td>
                   <td className="px-4 py-2.5 font-mono text-xs text-muted">{p.phone || '—'}</td>
                   <td className="px-4 py-2.5 text-xs text-muted">{p.email || '—'}</td>

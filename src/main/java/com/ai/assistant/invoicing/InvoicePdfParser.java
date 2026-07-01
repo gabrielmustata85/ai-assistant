@@ -31,7 +31,9 @@ public class InvoicePdfParser {
                 scadența, net, TVA, brut (numere cu punct zecimal, fără simbol valutar), categorie,
                 deductibil, și `direction` (ISSUED dacă firma a emis-o, RECEIVED dacă a primit-o).
                 Extrage și datele de contact ale PARTENERULUI dacă apar pe factură: IBAN, telefon,
-                email, adresă/sediu.
+                email, adresă/sediu, nr. reg. comerțului (partnerRegCom).
+                Dacă factura are o linie principală, extrage și unitatea de măsură (unit), cantitatea
+                (quantity) și prețul unitar (unitPrice).
                 Dacă un câmp lipsește, lasă-l gol (0 pentru sume).
 
                 === TEXT DOCUMENT ===

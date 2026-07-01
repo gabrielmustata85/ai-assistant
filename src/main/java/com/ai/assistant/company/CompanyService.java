@@ -40,6 +40,12 @@ public class CompanyService {
         if (patch.getCompanyType() != null) existing.setCompanyType(patch.getCompanyType());
         if (patch.getTaxRegime() != null) existing.setTaxRegime(patch.getTaxRegime());
         if (patch.getVatPayer() != null) existing.setVatPayer(patch.getVatPayer());
+        if (patch.getRegCom() != null) existing.setRegCom(patch.getRegCom());
+        if (patch.getAddress() != null) existing.setAddress(patch.getAddress());
+        if (patch.getIban() != null) existing.setIban(patch.getIban());
+        if (patch.getBank() != null) existing.setBank(patch.getBank());
+        if (patch.getPhone() != null) existing.setPhone(patch.getPhone());
+        if (patch.getEmail() != null) existing.setEmail(patch.getEmail());
         return repository.save(existing);
     }
 }

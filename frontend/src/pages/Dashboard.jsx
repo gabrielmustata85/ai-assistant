@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import { apiFetch } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
 import UrgencyBadge from '../components/UrgencyBadge.jsx'
+import EditCompanyModal from '../components/EditCompanyModal.jsx'
 import { parseDeadline, daysUntil, urgencyColor, URGENCY_COLORS } from '../lib/urgency.js'
 
 const INK = '#0B1B2E'
@@ -15,9 +16,10 @@ function lei(n) {
 }
 
 export default function Dashboard() {
-  const { selectedCompany } = useCompany()
+  const { selectedCompany, updateCompany } = useCompany()
   const { token } = useAuth()
   const { addToast } = useToast()
+  const [showEditCompany, setShowEditCompany] = useState(false)
   const [invoiceData, setInvoiceData] = useState([])
   const [employeeData, setEmployeeData] = useState([])
   const [expenseData, setExpenseData] = useState([])
@@ -94,14 +96,30 @@ export default function Dashboard() {
             {selectedCompany.vatPayer ? ' · plătitor TVA' : ''}
           </p>
         </div>
-        <button
-          onClick={loadObligations}
-          disabled={loadingObl}
-          className="shrink-0 bg-ink text-white hover:bg-inkSoft text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
-        >
-          {loadingObl ? 'Se calculează…' : '↻ Recalculează'}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowEditCompany(true)}
+            className="border border-hairline text-muted hover:bg-paper hover:text-ink text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+          >
+            Editează firma
+          </button>
+          <button
+            onClick={loadObligations}
+            disabled={loadingObl}
+            className="bg-ink text-white hover:bg-inkSoft text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+          >
+            {loadingObl ? 'Se calculează…' : '↻ Recalculează'}
+          </button>
+        </div>
       </div>
+
+      {showEditCompany && (
+        <EditCompanyModal
+          company={selectedCompany}
+          onClose={() => setShowEditCompany(false)}
+          onSaved={(updated) => { updateCompany(updated); setShowEditCompany(false) }}
+        />
+      )}
 
       {/* EROU — De plată + scadențar (bloc întunecat, contrast puternic) */}
       <div className="bg-ink rounded-2xl overflow-hidden mb-4 shadow-[0_10px_40px_-12px_rgba(11,27,46,0.5)]">

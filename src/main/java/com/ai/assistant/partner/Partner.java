@@ -26,6 +26,9 @@ public class Partner {
     @Column(length = 32)
     private String cui;
 
+    @Column(name = "reg_com", length = 64)
+    private String regCom;
+
     @Column(length = 34)
     private String iban;
 

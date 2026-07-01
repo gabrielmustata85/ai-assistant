@@ -35,3 +35,7 @@ build/
 
 # Local secrets — never commit
 .env
+
+# facturi de test (private)
+factura_*.pdf
+sample-factura.pdf

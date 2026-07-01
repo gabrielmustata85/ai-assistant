@@ -82,7 +82,8 @@ public class InvoiceService {
                         results.add(BatchParseResult.ok(name, inv, doc.getId()));
                         // Auto-populează colaboratorul cu datele de contact de pe factură.
                         partnerService.upsertFromInvoice(companyId, inv.partnerName(), inv.partnerCui(),
-                                inv.partnerIban(), inv.partnerPhone(), inv.partnerEmail(), inv.partnerAddress());
+                                inv.partnerRegCom(), inv.partnerIban(), inv.partnerPhone(),
+                                inv.partnerEmail(), inv.partnerAddress());
                     }
                 }
             } catch (Exception e) {

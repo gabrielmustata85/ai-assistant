@@ -51,6 +51,7 @@ public class PartnerService {
         companyService.get(p.getCompanyId());   // ownership
         p.setName(blankToKeep(data.getName(), p.getName()));
         p.setCui(data.getCui());
+        p.setRegCom(data.getRegCom());
         p.setIban(data.getIban());
         p.setPhone(data.getPhone());
         p.setEmail(data.getEmail());
@@ -69,7 +70,7 @@ public class PartnerService {
      * (apelantul deja l-a verificat). Face match după CUI, altfel după nume; completează doar
      * câmpurile lipsă, ca să nu suprascrie date bune cu goluri.
      */
-    public void upsertFromInvoice(Long companyId, String name, String cui,
+    public void upsertFromInvoice(Long companyId, String name, String cui, String regCom,
                                   String iban, String phone, String email, String address) {
         if (isBlank(name) && isBlank(cui)) return;   // nimic util de salvat
 
@@ -86,6 +87,7 @@ public class PartnerService {
             p.setCompanyId(companyId);
             p.setName(isBlank(name) ? cui.trim() : name.trim());
             p.setCui(trimOrNull(cui));
+            p.setRegCom(trimOrNull(regCom));
             p.setIban(trimOrNull(iban));
             p.setPhone(trimOrNull(phone));
             p.setEmail(trimOrNull(email));
@@ -94,6 +96,7 @@ public class PartnerService {
         } else {
             boolean changed = false;
             if (isBlank(existing.getCui()) && !isBlank(cui)) { existing.setCui(cui.trim()); changed = true; }
+            if (isBlank(existing.getRegCom()) && !isBlank(regCom)) { existing.setRegCom(regCom.trim()); changed = true; }
             if (isBlank(existing.getIban()) && !isBlank(iban)) { existing.setIban(iban.trim()); changed = true; }
             if (isBlank(existing.getPhone()) && !isBlank(phone)) { existing.setPhone(phone.trim()); changed = true; }
             if (isBlank(existing.getEmail()) && !isBlank(email)) { existing.setEmail(email.trim()); changed = true; }
