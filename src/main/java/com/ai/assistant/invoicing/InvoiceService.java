@@ -48,7 +48,11 @@ public class InvoiceService {
                 return new DownloadFile(d.getData(), name, type);
             }
         }
-        return new DownloadFile(pdfGenerator.generate(invoice, company), "factura-" + id + ".pdf", "application/pdf");
+        // Fără original → generăm PDF-ul, cu detaliile clientului trase din Colaboratori.
+        var partner = partnerService.lookup(invoice.getCompanyId(),
+                invoice.getPartnerCui(), invoice.getPartnerName()).orElse(null);
+        return new DownloadFile(pdfGenerator.generate(invoice, company, partner),
+                "factura-" + id + ".pdf", "application/pdf");
     }
 
     /** Extrage TOATE facturile dintr-un PDF (poate conține mai multe). Nu salvează — userul confirmă. */

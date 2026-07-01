@@ -3,6 +3,8 @@ package com.ai.assistant.invoicing;
 import com.ai.assistant.ai.ClaudeClient;
 import com.ai.assistant.company.Company;
 import com.ai.assistant.company.CompanyService;
+import com.ai.assistant.partner.Partner;
+import com.ai.assistant.partner.PartnerService;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashSet;
@@ -17,11 +19,14 @@ public class InvoiceAssistantService {
 
     private final CompanyService companyService;
     private final InvoiceService invoiceService;
+    private final PartnerService partnerService;
     private final ClaudeClient claudeClient;
 
-    public InvoiceAssistantService(CompanyService companyService, InvoiceService invoiceService, ClaudeClient claudeClient) {
+    public InvoiceAssistantService(CompanyService companyService, InvoiceService invoiceService,
+                                   PartnerService partnerService, ClaudeClient claudeClient) {
         this.companyService = companyService;
         this.invoiceService = invoiceService;
+        this.partnerService = partnerService;
         this.claudeClient = claudeClient;
     }
 
@@ -31,7 +36,7 @@ public class InvoiceAssistantService {
         String today = java.time.LocalDate.now().toString();
 
         List<Invoice> invoices = invoiceService.listForCompany(companyId);
-        String reference = buildReference(invoices);
+        String reference = buildPartners(partnerService.forCompany(companyId)) + buildReference(invoices);
 
         String prompt = "Te numești Marius, asistentul fiscal. Pregătești o SCHIȚĂ de factură pe care "
                 + "userul o va verifica și emite manual. NU inventa date pe care userul nu le-a dat, "
@@ -41,8 +46,9 @@ public class InvoiceAssistantService {
                 + reference + "\n"
                 + "Reguli:\n"
                 + "- direction = ISSUED (firma emite către client), dacă userul nu spune altfel.\n"
-                + "- Dacă clientul cerut apare deja în „Parteneri cunoscuți”, folosește EXACT același "
-                + "partnerName și partnerCui de acolo (nu rescrie, nu prescurta).\n"
+                + "- Dacă clientul cerut apare deja în „Colaboratori cunoscuți”, folosește EXACT același "
+                + "partnerName și partnerCui de acolo (nu rescrie, nu prescurta). Restul detaliilor "
+                + "(IBAN, adresă, telefon) se preiau automat din Colaboratori pe factura finală.\n"
                 + "- invoiceNumber: CONTINUĂ seria facturilor emise — următorul număr după ultimul, "
                 + "păstrând exact același format/serie (ex: dacă ultima e FCT-0007, pune FCT-0008). "
                 + "Dacă nu există nicio factură emisă, lasă invoiceNumber gol.\n"
@@ -58,19 +64,34 @@ public class InvoiceAssistantService {
         return claudeClient.extractStructuredHeavy(prompt, InvoiceDraft.class);
     }
 
-    /** Construiește contextul de referință: parteneri cunoscuți + facturi emise (pentru numerotare). */
+    /** Colaboratorii cunoscuți, cu toate detaliile (Marius refolosește exact numele și CUI de aici). */
+    private String buildPartners(List<Partner> partners) {
+        StringBuilder sb = new StringBuilder("COLABORATORI CUNOSCUȚI (folosește EXACT numele și CUI de aici pentru client):\n");
+        if (partners.isEmpty()) {
+            sb.append("  (niciunul încă)\n");
+        } else {
+            int i = 0;
+            for (Partner p : partners) {
+                if (i++ >= MAX_REF) break;
+                sb.append("  - ").append(p.getName())
+                  .append(" | CUI: ").append(nz(p.getCui()))
+                  .append(" | IBAN: ").append(nz(p.getIban()))
+                  .append(" | tel: ").append(nz(p.getPhone()))
+                  .append(" | email: ").append(nz(p.getEmail()))
+                  .append("\n");
+            }
+        }
+        return sb.append("\n").toString();
+    }
+
+    /** Facturile EMISE (pentru continuarea numerotării). */
     private String buildReference(List<Invoice> invoices) {
-        Set<String> partners = new LinkedHashSet<>();
         StringBuilder issued = new StringBuilder();
         String lastIssuedNumber = null;
         long lastTrailing = -1;
         int issuedCount = 0;
 
         for (Invoice inv : invoices) {
-            if (inv.getPartnerName() != null && !inv.getPartnerName().isBlank()) {
-                partners.add(inv.getPartnerName() + " | CUI: "
-                        + (inv.getPartnerCui() == null ? "-" : inv.getPartnerCui()));
-            }
             if (inv.getDirection() == Direction.ISSUED && inv.getInvoiceNumber() != null
                     && !inv.getInvoiceNumber().isBlank()) {
                 if (issuedCount < MAX_REF) {
@@ -87,24 +108,17 @@ public class InvoiceAssistantService {
             }
         }
 
-        StringBuilder sb = new StringBuilder("FACTURI EXISTENTE (referință):\n");
-        sb.append("Parteneri cunoscuți:\n");
-        if (partners.isEmpty()) {
-            sb.append("  (niciunul încă)\n");
-        } else {
-            int i = 0;
-            for (String p : partners) {
-                if (i++ >= MAX_REF) break;
-                sb.append("  - ").append(p).append("\n");
-            }
-        }
-        sb.append("Facturi EMISE (număr | client | data):\n");
+        StringBuilder sb = new StringBuilder("FACTURI EMISE (referință numerotare — număr | client | data):\n");
         sb.append(issued.length() == 0 ? "  (niciuna încă)\n" : issued);
         if (lastIssuedNumber != null) {
             sb.append("Ultimul număr de factură emis: ").append(lastIssuedNumber)
               .append(" (continuă de aici)\n");
         }
         return sb.toString();
+    }
+
+    private String nz(String s) {
+        return (s == null || s.isBlank()) ? "-" : s;
     }
 
     /** Numărul de la finalul unui identificator de factură (ex: „FCT-0007” -> 7), sau -1 dacă nu are. */

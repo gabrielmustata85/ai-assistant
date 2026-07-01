@@ -4,6 +4,7 @@ import com.ai.assistant.company.CompanyService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PartnerService {
@@ -19,6 +20,23 @@ public class PartnerService {
     public List<Partner> list(Long companyId) {
         companyService.get(companyId);   // verifică ownership
         return repository.findByCompanyIdOrderByNameAsc(companyId);
+    }
+
+    /** Uz intern (apelantul a verificat deja ownership-ul): toți colaboratorii firmei. */
+    public List<Partner> forCompany(Long companyId) {
+        return repository.findByCompanyIdOrderByNameAsc(companyId);
+    }
+
+    /** Uz intern: găsește un colaborator după CUI (întâi), altfel după nume. */
+    public Optional<Partner> lookup(Long companyId, String cui, String name) {
+        if (cui != null && !cui.isBlank()) {
+            Optional<Partner> byCui = repository.findFirstByCompanyIdAndCuiIgnoreCase(companyId, cui.trim());
+            if (byCui.isPresent()) return byCui;
+        }
+        if (name != null && !name.isBlank()) {
+            return repository.findFirstByCompanyIdAndNameIgnoreCase(companyId, name.trim());
+        }
+        return Optional.empty();
     }
 
     public Partner add(Long companyId, Partner partner) {

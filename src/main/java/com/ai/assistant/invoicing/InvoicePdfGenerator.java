@@ -1,6 +1,7 @@
 package com.ai.assistant.invoicing;
 
 import com.ai.assistant.company.Company;
+import com.ai.assistant.partner.Partner;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -24,11 +25,23 @@ public class InvoicePdfGenerator {
     private static final PDFont BOLD = PDType1Font.HELVETICA_BOLD;
 
     public byte[] generate(Invoice inv, Company company) {
+        return generate(inv, company, null);
+    }
+
+    /** partner = datele colaboratorului (IBAN/adresă/telefon/email) preluate din Colaboratori. */
+    public byte[] generate(Invoice inv, Company company, Partner partner) {
         boolean issued = inv.getDirection() == Direction.ISSUED;
         String supplierName = issued ? company.getName() : inv.getPartnerName();
         String supplierCui = issued ? company.getCui() : inv.getPartnerCui();
         String clientName = issued ? inv.getPartnerName() : company.getName();
         String clientCui = issued ? inv.getPartnerCui() : company.getCui();
+
+        // Detaliile de contact ale PARTENERULUI (nu ale firmei noastre) — din Colaboratori.
+        String pIban = partner == null ? null : partner.getIban();
+        String pAddress = partner == null ? null : partner.getAddress();
+        String pPhone = partner == null ? null : partner.getPhone();
+        String pEmail = partner == null ? null : partner.getEmail();
+        boolean partnerIsClient = issued;   // la factură emisă, partenerul e clientul (coloana dreapta)
 
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
@@ -62,7 +75,15 @@ public class InvoicePdfGenerator {
                 text(cs, FONT, 9, left, y, "CUI: " + nz(supplierCui, "-"));
                 text(cs, FONT, 9, colR, y, "CUI: " + nz(clientCui, "-"));
 
-                y -= 34;
+                // Detaliile partenerului (din Colaboratori), sub coloana lui.
+                float px = partnerIsClient ? colR : left;
+                float py = y - 12;
+                if (!blank(pIban))    { text(cs, FONT, 8, px, py, "IBAN: " + pIban); py -= 11; }
+                if (!blank(pAddress)) { text(cs, FONT, 8, px, py, "Adresa: " + pAddress); py -= 11; }
+                if (!blank(pPhone))   { text(cs, FONT, 8, px, py, "Tel: " + pPhone); py -= 11; }
+                if (!blank(pEmail))   { text(cs, FONT, 8, px, py, "Email: " + pEmail); py -= 11; }
+
+                y = Math.min(y - 34, py - 8);
                 line(cs, left, y, right, y);
                 y -= 16;
 
@@ -130,6 +151,10 @@ public class InvoicePdfGenerator {
 
     private static String nz(String s, String fallback) {
         return (s == null || s.isBlank()) ? fallback : s;
+    }
+
+    private static boolean blank(String s) {
+        return s == null || s.isBlank();
     }
 
     /** Fonturile standard PDF nu au diacritice — le transliterăm ca să nu crape encoding-ul. */
