@@ -43,6 +43,17 @@ public class InvoicePdfGenerator {
         String pEmail = partner == null ? null : partner.getEmail();
         boolean partnerIsClient = issued;   // la factură emisă, partenerul e clientul (coloana dreapta)
 
+        // Completează numele/CUI-ul partenerului din Colaboratori dacă lipsesc pe factură.
+        if (partner != null) {
+            if (issued) {
+                if (blank(clientCui)) clientCui = partner.getCui();
+                if (blank(clientName)) clientName = partner.getName();
+            } else {
+                if (blank(supplierCui)) supplierCui = partner.getCui();
+                if (blank(supplierName)) supplierName = partner.getName();
+            }
+        }
+
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);
