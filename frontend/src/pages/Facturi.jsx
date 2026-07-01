@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useCompany } from '../components/Layout.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import { apiFetch } from '../lib/api.js'
+import { apiFetch, apiBlob } from '../lib/api.js'
 import { useToast } from '../components/Toast.jsx'
 import BatchReviewModal from '../components/BatchReviewModal.jsx'
 import UrgencyBadge from '../components/UrgencyBadge.jsx'
@@ -121,6 +121,22 @@ export default function Facturi() {
       addToast(err.message || 'Eroare la generare.', 'error')
     } finally {
       setGenLoading(false)
+    }
+  }
+
+  async function handleDownload(inv) {
+    try {
+      const blob = await apiBlob(`/invoices/${inv.id}/pdf`, token)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `factura-${inv.invoiceNumber || inv.id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      addToast(err.message || 'Descărcare eșuată.')
     }
   }
 
@@ -381,6 +397,7 @@ export default function Facturi() {
                 <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Nr.</th>
                 <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Tip</th>
                 <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Partener</th>
+                <th className="text-left px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">CUI</th>
                 <th className="text-right px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Data emisă</th>
                 <th className="text-right px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Scadență</th>
                 <th className="text-right px-4 py-3 text-[11px] text-onDarkMuted font-semibold uppercase tracking-wide">Brut (LEI)</th>
@@ -399,6 +416,7 @@ export default function Facturi() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-ink">{inv.partnerName}</td>
+                  <td className="px-4 py-2.5 font-mono text-xs tabular-nums text-muted">{inv.partnerCui || '—'}</td>
                   <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted">{inv.issueDate}</td>
                   <td className="px-4 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -410,7 +428,11 @@ export default function Facturi() {
                     {(inv.grossAmount || 0).toLocaleString('ro-RO', { minimumFractionDigits: 2 })}
                     <span className="text-muted text-xs ml-1">LEI</span>
                   </td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                    <button onClick={() => handleDownload(inv)}
+                      className="text-xs text-accent hover:underline transition-colors mr-3">
+                      ↓ PDF
+                    </button>
                     <button onClick={() => handleDelete(inv.id)}
                       className="text-xs text-muted hover:text-danger transition-colors">
                       Șterge

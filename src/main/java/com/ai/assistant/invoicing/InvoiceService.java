@@ -1,6 +1,7 @@
 package com.ai.assistant.invoicing;
 
 import com.ai.assistant.common.BatchParseResult;
+import com.ai.assistant.company.Company;
 import com.ai.assistant.company.CompanyService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,11 +15,21 @@ public class InvoiceService {
     private final InvoiceRepository repository;
     private final CompanyService companyService;
     private final InvoicePdfParser pdfParser;
+    private final InvoicePdfGenerator pdfGenerator;
 
-    public InvoiceService(InvoiceRepository repository, CompanyService companyService, InvoicePdfParser pdfParser) {
+    public InvoiceService(InvoiceRepository repository, CompanyService companyService,
+                          InvoicePdfParser pdfParser, InvoicePdfGenerator pdfGenerator) {
         this.repository = repository;
         this.companyService = companyService;
         this.pdfParser = pdfParser;
+        this.pdfGenerator = pdfGenerator;
+    }
+
+    /** Generează PDF-ul unei facturi (șablon unic). Verifică ownership-ul firmei. */
+    public byte[] pdf(Long id) {
+        Invoice invoice = repository.findById(id).orElseThrow();
+        Company company = companyService.get(invoice.getCompanyId());   // ownership
+        return pdfGenerator.generate(invoice, company);
     }
 
     /** Extrage TOATE facturile dintr-un PDF (poate conține mai multe). Nu salvează — userul confirmă. */

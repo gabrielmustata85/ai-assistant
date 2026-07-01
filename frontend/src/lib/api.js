@@ -60,3 +60,19 @@ export async function apiFetch(path, options = {}, token = null) {
 
   return data
 }
+
+/** Descarcă un răspuns binar (ex: PDF) ca Blob, cu Bearer token. */
+export async function apiBlob(path, token = null) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  if (res.status === 402) {
+    window.dispatchEvent(new CustomEvent('quota-exceeded'))
+  }
+  if (!res.ok) {
+    const err = new Error(`Eroare ${res.status}`)
+    err.status = res.status
+    throw err
+  }
+  return res.blob()
+}
