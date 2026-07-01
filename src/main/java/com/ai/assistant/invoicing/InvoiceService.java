@@ -16,20 +16,36 @@ public class InvoiceService {
     private final CompanyService companyService;
     private final InvoicePdfParser pdfParser;
     private final InvoicePdfGenerator pdfGenerator;
+    private final InvoiceDocumentRepository documentRepository;
 
     public InvoiceService(InvoiceRepository repository, CompanyService companyService,
-                          InvoicePdfParser pdfParser, InvoicePdfGenerator pdfGenerator) {
+                          InvoicePdfParser pdfParser, InvoicePdfGenerator pdfGenerator,
+                          InvoiceDocumentRepository documentRepository) {
         this.repository = repository;
         this.companyService = companyService;
         this.pdfParser = pdfParser;
         this.pdfGenerator = pdfGenerator;
+        this.documentRepository = documentRepository;
     }
 
-    /** Generează PDF-ul unei facturi (șablon unic). Verifică ownership-ul firmei. */
-    public byte[] pdf(Long id) {
+    /**
+     * Fișierul de descărcat pentru o factură: originalul încărcat dacă există, altfel PDF-ul generat.
+     * Verifică ownership-ul firmei.
+     */
+    public DownloadFile download(Long id) {
         Invoice invoice = repository.findById(id).orElseThrow();
         Company company = companyService.get(invoice.getCompanyId());   // ownership
-        return pdfGenerator.generate(invoice, company);
+        if (invoice.getSourceDocumentId() != null) {
+            InvoiceDocument d = documentRepository.findById(invoice.getSourceDocumentId()).orElse(null);
+            if (d != null && d.getData() != null) {
+                String name = (d.getFilename() != null && !d.getFilename().isBlank())
+                        ? d.getFilename() : ("factura-" + id + ".pdf");
+                String type = (d.getContentType() != null && !d.getContentType().isBlank())
+                        ? d.getContentType() : "application/pdf";
+                return new DownloadFile(d.getData(), name, type);
+            }
+        }
+        return new DownloadFile(pdfGenerator.generate(invoice, company), "factura-" + id + ".pdf", "application/pdf");
     }
 
     /** Extrage TOATE facturile dintr-un PDF (poate conține mai multe). Nu salvează — userul confirmă. */
@@ -52,8 +68,11 @@ public class InvoiceService {
                 if (invoices.isEmpty()) {
                     results.add(BatchParseResult.failed(name, "Nicio factură găsită în document."));
                 } else {
+                    // Stochează fișierul original o singură dată; toate facturile din el îl referă.
+                    InvoiceDocument doc = documentRepository.save(
+                            new InvoiceDocument(companyId, name, file.getContentType(), file.getBytes()));
                     for (ParsedInvoice inv : invoices) {
-                        results.add(BatchParseResult.ok(name, inv));
+                        results.add(BatchParseResult.ok(name, inv, doc.getId()));
                     }
                 }
             } catch (Exception e) {

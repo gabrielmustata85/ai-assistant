@@ -71,15 +71,15 @@ public class InvoiceController {
         return ResponseEntity.ok(service.listForCompany(companyId));
     }
 
-    /** Descarcă factura ca PDF (același șablon pentru toate). */
+    /** Descarcă factura: originalul încărcat dacă există, altfel PDF-ul generat. */
     @GetMapping("/invoices/{id}/pdf")
     public ResponseEntity<byte[]> pdf(@PathVariable Long id) {
-        byte[] bytes = service.pdf(id);
+        DownloadFile f = service.download(id);
         return ResponseEntity.ok()
-                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/pdf")
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, f.contentType())
                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"factura-" + id + ".pdf\"")
-                .body(bytes);
+                        "attachment; filename=\"" + f.filename() + "\"")
+                .body(f.data());
     }
 
     @DeleteMapping("/invoices/{id}")

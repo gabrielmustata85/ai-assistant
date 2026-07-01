@@ -165,7 +165,11 @@ export default function Facturi() {
         { method: 'POST', body: fd },
         token
       )
-      setBatchItems(results)
+      // Duc documentId (fișierul original) prin tabelul de verificare, ca să-l legăm la salvare.
+      const withDoc = results.map(r =>
+        r.parsed ? { ...r, parsed: { ...r.parsed, _documentId: r.documentId } } : r
+      )
+      setBatchItems(withDoc)
       setShowBatchModal(true)
     } catch (err) {
       const msg = err.message || 'Eroare la extragerea datelor.'
@@ -193,6 +197,7 @@ export default function Facturi() {
           grossAmount: parseFloat(row.grossAmount) || 0,
           category: row.category || '',
           deductible: Boolean(row.deductible),
+          sourceDocumentId: row._documentId ?? null,
         }
         const inv = await apiFetch(`/companies/${selectedCompany.id}/invoices`, {
           method: 'POST', body: JSON.stringify(body),

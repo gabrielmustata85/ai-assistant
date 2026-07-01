@@ -57,6 +57,10 @@ public class Invoice {
     @Column(nullable = false)
     private boolean deductible;
 
+    /** Id-ul fișierului PDF original încărcat (dacă factura provine dintr-un upload). */
+    @Column(name = "source_document_id")
+    private Long sourceDocumentId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
